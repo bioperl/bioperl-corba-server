@@ -67,7 +67,7 @@ use strict;
 # Object preamble - inherits from Bio::Root::Object
 use Bio::CorbaServer::Base;
 use Bio::CorbaServer::PrimarySeqIterator;
-use Bio::Index::Fasta;
+
 
 @ISA = qw( Bio::CorbaServer::Base POA_org::Biocorba::Seqcore::SeqDB);
 

@@ -67,20 +67,22 @@ use strict;
 # Object preamble - inherits from Bio::Root::Object
 use Bio::CorbaServer::Base;
 use Bio::CorbaServer::PrimarySeqIterator;
-use Bio::Index::Fasta;
+
 
 @ISA = qw( Bio::CorbaServer::Base POA_org::Biocorba::Seqcore::PrimarySeqDB);
 
 sub new { 
-    my ($class,$poa,$name,$indexfile) = @_;
+    my ($class,$poa,$name,$seqdb) = @_;
     my $self = Bio::CorbaServer::Base->new($poa);
 
     bless ($self,$class);
     $self->{_dbname} = $name;
-    # should it we make this more generic?
-    $self->seqdb(Bio::Index::Fasta->new(-filename    =>$indexfile,
-					-write_flag  =>0,
-					-verbose     =>0));
+    # ewan - changed this to be a far more generic interface.
+    if( !ref $seqdb || !$seqdb->isa('Bio::DB::SeqI') ) {
+	$self->throw("Could not make a Corba Server from a non Bio::DB::SeqI interface, $seqdb");
+    }
+    # should we make it more generic?
+    $self->seqdb($seqdb);
     return $self;
 }
 
