@@ -1,0 +1,10 @@
+Revision History for BioCorbaServer modules
+
+Apr 2000 
+	Jason Stajich starts writing wrapper methods around various 
+	Bioperl modules to make them CORBA accessible.  Updated 
+	Primary Seq to take advantage of 0.06 bioperl release features.
+
+Feb 2000 
+	Ewan Birney writes biocorba.idl, Bio::CorbaServer::PrimarySeq, and
+	a test suite
