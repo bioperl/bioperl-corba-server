@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 use strict;
-use CORBA::ORBit idl => [ '../idl/seqcore.idl' ];
+use CORBA::ORBit idl => [ 'idl/biocorba.idl' ];
 use Error qw(:try);
 my $ior_file = "seqfeatures.ior";
 print STDERR "Got file $ior_file\n";
@@ -76,28 +76,28 @@ my $iterator;
 #  # test error handling
 #  try {
 #     $seq->get_SeqFeatures_in_region_by_type(0,3000, 0,'GENE');
-#  } catch org::biocorba::seqcore::OutOfRange with {    
+#  } catch bsane::seqcore::OutOfRange with {    
 #      my $E = shift;
 #      print "Caught: ", $E->{'reason'}, "\n";
 #  };
 
 #  try {
 #      $seq->get_SeqFeatures_in_region_by_type(0,3000, 0,'GENE');
-#  } catch org::biocorba::seqcore::OutOfRange with {
+#  } catch bsane::seqcore::OutOfRange with {
 #      my $E = shift;
 #      print "Caught: ", $E->{'reason'}, "\n";
 #  };
 
 #  try {
 #      $seq->get_SeqFeatures_in_region(1000,1001, 0);
-#  } catch org::biocorba::seqcore::OutOfRange with {
+#  } catch bsane::seqcore::OutOfRange with {
 #      my $E = shift;
 #      print "Caught: ", $E->{'reason'}, "\n";
 #  };
 
 #  try { 
 #      $seq->get_SeqFeatures_in_region(1001,800, 0);
-#  } catch org::biocorba::seqcore::OutOfRange with {
+#  } catch bsane::seqcore::OutOfRange with {
 #      my $E = shift;
 #      print "Caught: ", $E->{'reason'}, "\n";
 #  };
@@ -105,7 +105,7 @@ my $iterator;
 #  try {
 #      $seq->get_SeqFeatures_in_region(800,100, 0);
 #  }
-#  catch org::biocorba::seqcore::OutOfRange with {
+#  catch bsane::seqcore::OutOfRange with {
 #      my $E = shift;
 #      print "Caught: ", $E->{'reason'}, "\n";
 #  };

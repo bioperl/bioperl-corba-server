@@ -13,11 +13,11 @@ close(F);
 
 
 my $db = $orb->string_to_object($ior);
-
+print "db is $db\n";
 try {
-    my $seq = $db->resolve('HSMETOO');
+    my $seq = $db->resolve('AJ235314');
     print "Seq is ", $seq->seq(), "\n";
 } except { 
     my $E = shift;
-    print "exception ", $E->{'reason'}, "\n";
+    print "exception $E", $E->{'reason'}, "\n";
 };
