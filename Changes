@@ -1,14 +1,20 @@
-Revision History for BioCorbaServer modules
+Revision History for BioCorba::Server modules
 
-May 2000
-	Jason Stajich finished most of the wrapper modules, worked on
-	Bio::CorbaClient code and began java and python implementations.
+0.01   Tue May 22 17:34:47 EDT 2000  
+	- Initial release 
+	- Supports full IDL features.  servers and testclients
+	  provide the best examples of use at this time.
+	- Requires Bioperl >= 0.06 	
+	- Tested and passed interoperability with other bio* projects
+	  Biojava, biopython ( only supporting fnorb at this time )
 
-Apr 2000 
-	Jason Stajich starts writing wrapper methods around various 
-	Bioperl modules to make them CORBA accessible.  Updated 
-	Primary Seq to take advantage of 0.06 bioperl release features.
+       Issues, Known Bugs:
+	- Biopython client with OmniOrb crashes the server
+pre-0.01 
+ 	- Ewan Birney writes biocorba.idl (with biojava and biopython groups)
+	- Ewan writes Bio::CorbaServer::PrimarySeq, and a test suite
+	- Jason Stajich starts writing wrapper methods around various 
+	  Bioperl modules to make them CORBA accessible.  
+	- Updated Primary Seq to take advantage of 0.06 bioperl 
+	  release features. 
 
-Feb 2000 
-	Ewan Birney writes biocorba.idl, Bio::CorbaServer::PrimarySeq, and
-	a test suite

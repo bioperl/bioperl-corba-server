@@ -72,9 +72,9 @@ require 5.004;
 use ExtUtils::MakeMaker;
 
 $do_autoload_finesse = 0;
-$NAME     = 'BioCorbaServer';
+$NAME     = 'Bio';
 $DISTNAME = "bioperl-corba-server";
-$VERSION  = "0.6";
+$VERSION  = "0.1";
 
 $error = 0;
 foreach $name ( keys %packages ) {
