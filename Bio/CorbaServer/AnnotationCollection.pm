@@ -87,13 +87,20 @@ use Bio::CorbaServer::Base;
 sub new {
     my ($class, @args) = @_;
     my $self = $class->SUPER::new(@args);
-    my ($col) = $self->_rearrange([qw(COLLECTION)],@args);
-
-    if( ! defined $col || !ref $col || ! $col->isa('Bio::AnnotationCollectionI') ) {
-	$col = '' if( !defined $col );
-	$self->throw($class ." got a non AnnotationCollection [$col] for server object");
+    my ($col,$tags) = $self->_rearrange([qw(COLLECTION TAGS)],@args);
+    
+    if( defined $col && ref($col) && 
+	$col->isa('Bio::AnnotationCollectionI') ) {
+	if( defined $tags ) { $self->warn("initializing annotation collection with both a bioperl annotation collection and tags, ignoring tags") }
+	$self->_collection($col);	
+    } elsif( defined $tags && ref($tags) =~ /HASH/i  ) {
+	$self->_tags($tags);
+    } else {
+	$col = '' unless ! defined $class;
+	$tags = '' unless defined $tags;
+	$self->throw($class ." got a non AnnotationCollection [$col] and non has for [$tags] for server object");	
     }
-    $self->_collection($col);
+
     return $self;
 }
 
@@ -110,7 +117,11 @@ sub new {
 
 sub get_num_annotations{
    my ($self) = @_;
-   return $self->_collection->get_num_of_annotations;
+   if( defined $self->_collection ) {
+       return $self->_collection->get_num_of_annotations;
+   } else {        
+       return scalar keys %{$self->_tags};
+   }
 }
 
 =head2 get_annotations
@@ -128,14 +139,29 @@ sub get_annotations{
    my ($self,$howmany,$iterator) = @_;
 
    my @data;
-   foreach my $key ( $self->_collection->get_all_annotation_keys() ) {
-       my @values = $self->_collection->get_Annotations($key);
-       foreach  ( @values ) {
-	   my $a = new Bio::CorbaServer::Annotation('-poa'   => $self->poa,
-						    '-name'  => $key,
-						    '-basis' => 4,# hard coded for now
-						    '-value' => $_);
-	   push @data, $a->get_activated_object_reference();
+   if( defined $self->_collection ) {
+       foreach my $key ( $self->_collection->get_all_annotation_keys() ) {
+	   my @values = $self->_collection->get_Annotations($key);
+	   foreach  ( @values ) {
+	       my $a = new Bio::CorbaServer::Annotation('-poa'   => $self->poa,
+							'-name'  => $key,
+							'-basis' => 4,# hard coded for now
+							'-value' => $_);
+	       push @data, $a->get_activated_object_reference();
+	   }
+       }
+   } else { 
+       my $tags = $self->_tags;
+       foreach my $key ( keys %{$tags} ) {
+	   my $values = $tags->{$key};
+	   foreach ( @$values ) {
+	       my $a =  new Bio::CorbaServer::Annotation
+		   ('-poa'   => $self->poa,
+		    '-name'  => $key,
+		    '-basis' => 4,# hard coded for now
+		    '-value' => $_);
+	       push @data, $a->get_activated_object_reference();
+	   }
        }
    }
    my @values;
@@ -144,7 +170,7 @@ sub get_annotations{
    }
    $iterator = new Bio::CorbaServer::Iterator('-poa' => $self->poa,
 					      '-items' => \@data);
-   return @values;
+   return (\@values,$iterator->get_activated_object_reference());
 }
 
 =head2 _collection
@@ -165,6 +191,26 @@ sub _collection{
       $self->{'_collection'} = $value;
     }
     return $self->{'_collection'};
+}
+
+=head2 _tags
+
+ Title   : _tags
+ Usage   : $obj->_tags($newval)
+ Function: 
+ Example : 
+ Returns : value of _tags
+ Args    : newvalue (optional)
+
+
+=cut
+
+sub _tags{
+   my ($self,$value) = @_;
+   if( defined $value) {
+      $self->{'_tags'} = $value;
+    }
+    return $self->{'_tags'};
 }
 
 1;
