@@ -1,4 +1,4 @@
-
+# $Id$
 #
 # BioPerl module for Bio::CorbaServer::Seq
 #
@@ -64,94 +64,82 @@ The rest of the documentation details each of the object methods. Internal metho
 
 # Let the code begin...
 
-
 package Bio::CorbaServer::Seq;
 use vars qw(@ISA);
 use strict;
 
 use Bio::CorbaServer::PrimarySeq;
+use Bio::CorbaServer::Base;
 use Bio::CorbaServer::SeqFeatureCollection;
-use Bio::Range;
+#use Bio::CorbaServer::AnnotationCollection;
 
-@ISA = qw(POA_bsane::seqcore::Seq Bio::CorbaServer::PrimarySeq);
-
-# new is handled by PrimarySeq
-
-=head2 get_id
-
- Title   : get_id
- Usage   :
- Function:
- Example :
- Returns : 
- Args    :
-
-
-=cut
-
-sub get_id{
-   my ($self,@args) = @_;
-
-   return $self->accession_number;
-}
-
-=head2 get_name
-
- Title   : get_name
- Usage   :
- Function:
- Example :
- Returns : 
- Args    :
-
-
-=cut
-
-sub get_name{
-   my ($self) = @_;
-
-   return $self->display_id
-}
-
-=head2 get_description
-
- Title   : get_description
- Usage   :
- Function:
- Example :
- Returns : 
- Args    :
-
-
-=cut
-
-sub get_description{
-   my ($self) = @_;
-
-   return $self->desc;
-}
-
-
+@ISA = qw( POA_bsane::seqcore::BioSequence Bio::CorbaServer::PrimarySeq  );
 
 =head2 get_anonymous_sequence
 
  Title   : get_anonymous_sequence
- Usage   : my $pseq = $seq->get_anonymous_sequence
- Function: returns a primary sequence with no features attached
- Returns : Bio::CorbaServer::PrimarySeq  
- Args    : none
- 
-This is put here so that clients can ask servers just for the
-sequence and then free the large, seqfeature containing sequence.
-It prevents a sequence with features having to stay in memory for ever.
+ Usage   :
+ Function:
+ Example :
+ Returns : 
+ Args    :
+
 
 =cut
 
-sub get_anonymous_sequence {
+sub get_anonymous_sequence{
+   my ($self,@args) = @_;
+   my $s = new Bio::CorbaServer::PrimarySeq('-poa' => $self->poa,
+					     '-seq' => $self->_seq);
+   return $s->get_activated_object_reference;
+}
+
+=head2 get_seq_features
+
+ Title   : get_seq_features
+ Usage   : $collection = $seq->get_seq_features()
+ Function: Get a SeqFeatureCollection
+ Returns : bsane::seqcore::SeqFeatureCollection
+ Args    : none
+
+=cut
+
+sub get_seq_features{
     my ($self) = @_;
-    my $s =  new Bio::CorbaServer::PrimarySeq('-poa' => $self->poa,
-					      '-seq' => $self->_seq->primary_seq);
-    return $s->get_activated_object_reference();
+    my $sfc = new Bio::CorbaServer::SeqFeatureCollection('-poa' => $self->poa,
+							 '-seq' => $self->_seq);
+    return $sfc->get_activated_object_reference;
+}
+
+=head2 get_annotations
+
+ Title   : get_annotations
+ Usage   : $collection = $seq->get_annotations
+ Function: Get an AnnotationCollection
+ Returns : bsane::AnnotationCollection
+ Args    : none
+
+=cut
+
+sub get_annotations {
+    my ($self) = @_;
+    return undef;
+}
+
+=head2 get_alphabet
+
+ Title   : get_alphabet
+ Usage   :
+ Function:
+ Example :
+ Returns : 
+ Args    :
+
+=cut
+
+sub get_alphabet{
+   my ($self,@args) = @_;
+
 }
 
 1;

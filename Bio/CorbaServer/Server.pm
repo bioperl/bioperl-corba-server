@@ -69,9 +69,14 @@ The rest of the documentation details each of the object methods. Internal metho
     
 package Bio::CorbaServer::Server;
 
-use vars qw($AUTOLOAD @ISA);
+BEGIN { 
+    die('Must defined ENV variable BIOCORBAHOME') 
+	unless ( defined $ENV{'BIOCORBAHOME'} );
+}
+
+use vars qw(@ISA);
 use strict;
-use CORBA::ORBit idl => [ 'biocorba.idl' ];
+use CORBA::ORBit idl => [ "$ENV{BIOCORBAHOME}/idl/seqcore.idl" ];
 use Bio::Root::RootI;
 
 @ISA = qw ( Bio::Root::RootI );
@@ -96,7 +101,7 @@ sub new {
 }
 
 sub start { 
-    my ($self) = @_;
+    my ($self) = @_;    
     open(OUT, ">" . $self->{'_ior'}) || 
 	$self->throw("cannot open ior file " . $self->{'_ior'}); 
     foreach my $object ( @{$self->{'_serverobjs'}} ) { 

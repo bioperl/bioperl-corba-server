@@ -64,7 +64,7 @@ The rest of the documentation details each of the object methods. Internal metho
 
 package Bio::CorbaServer::PrimarySeq;
 
-use vars qw($AUTOLOAD @ISA);
+use vars qw(@ISA);
 use strict;
 use Bio::CorbaServer::Base;
 
@@ -231,7 +231,6 @@ sub _seq {
  Example :
  Returns : 
  Args    :
-
 
 =cut
 

@@ -65,16 +65,11 @@ use vars qw(@ISA %FUZZYCODES);
 use strict;
 use Bio::CorbaServer::Base;
 use Bio::CorbaServer::SeqFeatureVector;
+use Bio::CorbaServer::Utils qw(create_Bioperl_location_from_BSANE_location
+			       create_BSANE_location_from_Bioperl_location);
 
-@ISA = qw(POA_org::biocorba::seqcore::SeqFeature Bio::CorbaServer::Base);
+@ISA = qw(POA_bsane::seqcore::SeqFeature Bio::CorbaServer::Base);
 
-BEGIN { 
-    %FUZZYCODES = ( 'EXACT' => 1,
-		    'WITHIN' => 2,
-		    'BETWEEN' => 3,
-		    'BEFORE' => 4,
-		    'AFTER'  => 5 );
-}
 sub new {
     my ($class, @args) = @_;
     my $self = $class->SUPER::new(@args);
@@ -135,76 +130,36 @@ sub seq_primary_id {
   return $self->_seqf->location->seq_id || -1;
 }
 
-=head2 start
+=head2 get_start
 
- Title   : start
- Usage   : my $start  = $obj->start 
+ Title   : get_start
+ Usage   : my $start  = $obj->get_start 
  Function: starting position of seqfeature 
  Returns : long
  Args    : none
 
 =cut
 
-sub start {
+sub get_start {
   my ($self) = @_;
   $self->_seqf->start;
 }
 
-=head2 end
+=head2 get_end
 
  Title   : end
- Usage   : my $end = $obj->end
+ Usage   : my $end = $obj->get_end
  Function: ending position of seqfeature
  Returns : long
  Args    : none
 
 =cut
 
-sub end {
+sub get_end {
    my ($self) = @_;
    $self->_seqf->end;
 }
 
-=head2 strand
-
- Title   : strand
- Usage   : my $strand = $obj->strand 
- Function: returns strand seqfeature is on
- Returns : short (-1,0,1) 0 for protein
- Args    : none
-
-
-=cut
-
-sub strand{
-   my ($self) = @_;
-   return $self->_seqf->strand;
-}
-
-=head2 qualifiers
-
- Title   : qualifiers
- Usage   : my @qual = $obj->qualifiers
- Function: returns properties
- Returns : array ref to list of hashes 
- Args    :
-
-=cut
-
-sub qualifiers{
-  my ($self,@args) = @_;
-  my @tags = $self->_seqf->all_tags;
-
-  my @all_values;
-  foreach my $tag (@tags) {
-    my $name_value = { name => $tag,
-		       values =>[$self->_seqf->each_tag_value($tag)]
-		     };
-    push(@all_values, $name_value);
-  }
-      
-  return [@all_values];
-}
 =head2 sub_SeqFeatures
 
  Title   : sub_SeqFeatures
@@ -236,22 +191,22 @@ sub sub_SeqFeatures {
     return $s->get_activated_object_reference();
 }
 
-=head2 locations
+=head2 get_locations
 
- Title   : locations
- Usage   : my $locations = $seqf->SeqFeatureLocationList
- Function: returns if PrimarySeq is available (and attached)
+ Title   : get_locations
+ Usage   : my $locations = $seqf->get_locations
+ Function: returns SeqFeatureLocationList
  Returns : ref to array of SeqFeatureLocation (hash)
  Args    : none
 
 =cut
 
-sub locations {
+sub get_locations {
     my ($self) = @_;
     my $location = $self->_seqf->location();
 
     if( !defined $location ) {
-	throw org::biocorba::seqcore::UnableToProcess(reason=>'Location object does not exist for contained seqfeature');
+	throw bsnae::seqcore::UnableToProcess(reason=>'Location object does not exist for contained seqfeature');
     } 
 
     # recursively build the locations in case they are SplitLocations
@@ -269,6 +224,7 @@ sub _buildlocations {
 
     #print STDERR "Building a location with $location\n";
 
+    ;    
     my @locations;
     if( $location->isa('Bio::Location::SplitLocationI') ) {
 	foreach my $loc ( $location->sub_Location() ) {

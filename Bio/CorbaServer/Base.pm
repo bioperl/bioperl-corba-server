@@ -101,6 +101,8 @@ sub unref {
     $self->{'reference_count'}--;
 }
 
+sub remove { (shift)->unref }
+
 =head2 poa
 
  Title   : poa

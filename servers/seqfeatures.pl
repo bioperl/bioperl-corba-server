@@ -3,11 +3,11 @@ use strict;
 use Bio::SeqIO;
 
 my $seq = Bio::SeqIO->new('-format' => 'genbank',
-			  '-file'   => 't/test.genbank')->next_seq;
+			  '-file'   => '../t/test.genbank')->next_seq;
 
 # lets go CORBA-ing
 
-use CORBA::ORBit idl => [ 'biocorba.idl' ];
+use CORBA::ORBit idl => [ '../idl/seqcore.idl' ];
 
 #build the actual orb and get the first POA (Portable Object Adaptor)
 my $orb = CORBA::ORB_init("orbit-local-orb");

@@ -67,7 +67,7 @@ use strict;
 
 use Bio::CorbaServer::Base;
 
-@ISA = qw(POA_org::biocorba::seqcore::SeqFeatureIterator 
+@ISA = qw(POA_bsane::seqcore::SeqFeatureIterator 
 	Bio::CorbaServer::Base);
 
 sub new {
@@ -76,7 +76,7 @@ sub new {
     my ($items) = $self->_rearrange([qw(ITEMS)], @args);
 
     if( $items && ref($items) !~ /array/i ) {
-	throw org::biocorba::seqcore::UnableToProcess 
+	throw bsane::seqcore::UnableToProcess 
 	    reason => "initializing a $class with an invalid argument ($items) instead of an array of items";
     }
     if( !defined $items ) {
@@ -117,7 +117,7 @@ sub next {
 
     # check to be sure we still have items to return
     if (! $self->has_more()) {
-	throw org::biocorba::seqcore::EndOfStream;
+	throw bsane::seqcore::EndOfStream;
     }
     
     my $item = $self->_elements->[$self->{'_pointer'}];
