@@ -30,8 +30,21 @@ try {
 	printf "time to count features = %f\n", gettimeofday() - $start;
 	$start = gettimeofday();
 
-	my ($list,$iter) = $sfc->get_features_on_region(2,&create_BSANE_location_from_Bioperl_location(new Bio::Location::Simple('-start' => 1, '-end' => $seq->get_length-1, '-strand' => 1 ) ));
+	my ($list,$fiter) = $sfc->get_features_on_region(2,&create_BSANE_location_from_Bioperl_location(new Bio::Location::Simple('-start' => 1, '-end' => $seq->get_length-1, '-strand' => 1 ) ));
 
+	printf "time to retrieve features is = %f\n", gettimeofday() - $start;
+	$start = gettimeofday();
+	my ($fstatus,$feature);
+	while( (($fstatus,$feature) = $fiter->next()) && $fstatus ) {
+	    print "start is ", $feature->get_start(), " end is ", $feature->get_end(), "\n";
+	    my $annotcol = $feature->get_annotations();
+	    if( defined $annotcol ) {
+		print  "annotation len is ", 
+		$annotcol->get_num_annotations(), "\n";
+	    } else { 
+		print "no annotations returned\n";
+	    }
+	}
 	printf "time to retrieve features is = %f\n", gettimeofday() - $start;
     }
 
