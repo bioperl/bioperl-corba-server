@@ -14,10 +14,20 @@ close(F);
 
 my $db = $orb->string_to_object($ior);
 print "db is $db\n";
+my $seq;
 try {
     my $seq = $db->resolve('AJ235314');
     print "Seq is ", $seq->seq(), "\n";
+} catch bsane::IdentifierDoesNotExist with { 
+    my $E = shift;
+    print "Caught an exception for a nonexistent id - good!\n $E", 
+          $E->{'reason'}, "\n";    
+};
+
+try {
+    $seq = $db->resolve('HSEARLOBE');
+    print "Seq is ", $seq->seq(), "\n";
 } except { 
     my $E = shift;
-    print "exception $E", $E->{'reason'}, "\n";
+    print "exception is $E", $E->{'reason'}, "\n";
 };
