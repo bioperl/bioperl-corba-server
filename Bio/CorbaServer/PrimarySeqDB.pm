@@ -171,6 +171,20 @@ sub get_PrimarySeq {
     }
 }
 
+=head2 max_sequence_length
+
+ Title   : max_sequence_length
+ Usage   : my $maxlen = $obj->max_sequence_length;
+ Function: return the maximum sequence length this server can return
+ Returns : long
+ Args    : none
+
+=cut
+
+sub max_sequence_length {
+    return 1e6;
+}
+
 =head1 Protected PrimarySeqDB  
 
 =head2 _seqdb
@@ -178,7 +192,6 @@ sub get_PrimarySeq {
  Title   : _seqdb
  Usage   : 
  Function: get/set the underlying seqdb reference
- Example :
  Returns : reference to seqdb object
  Args    : 
 
