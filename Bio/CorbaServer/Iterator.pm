@@ -61,6 +61,7 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::CorbaServer::Iterator;
+use CORBA::ORBit;
 
 use vars qw(@ISA);
 use strict;
@@ -117,11 +118,12 @@ sub next {
 
     # check to be sure we still have items to return
     if (! $self->has_more()) {
-	return (0,[]);
+	return (0,undef);
     }
     
     my $item = $self->_elements->[$self->{'_pointer'}];
     $self->{'_pointer'}++;
+
     return (defined $item, $item);
 }
 
