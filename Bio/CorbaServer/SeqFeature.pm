@@ -59,13 +59,20 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::CorbaServer::SeqFeature;
-use vars qw(@ISA);
+use vars qw(@ISA %FUZZYCODES);
 use strict;
 use Bio::CorbaServer::Base;
 use Bio::CorbaServer::SeqFeatureVector;
 
 @ISA = qw(POA_org::biocorba::seqcore::SeqFeature Bio::CorbaServer::Base);
 
+BEGIN { 
+    %FUZZYCODES = ( 'EXACT' => 1,
+		    'WITHIN' => 2,
+		    'BETWEEN' => 3,
+		    'BEFORE' => 4,
+		    'AFTER'  => 5 );
+}
 sub new {
     my ($class, @args) = @_;
     my $self = $class->SUPER::new(@args);
@@ -240,31 +247,60 @@ sub sub_SeqFeatures {
 sub locations {
     my ($self) = @_;
     my $location = $self->_seqf->location();
+    my @locations;
+
     if( !defined $location ) {
 	throw org::biocorba::seqcore::UnableToProcess(reason=>'Location object does not exist for contained seqfeature');
-    }
-    my (@locations);
+    } 
+
+    # recursively build the locations in case they are SplitLocations
+    return [ &_buildlocations($location) ];
+}
+
+# for recursively getting all the locations
+
+sub _buildlocations {
+    my ($location) = @_;
+
+    my @locations;
     if( $location->isa('Bio::Location::SplitLocationI') ) {
-	    throw org::biocorba::seqcore::UnableToProcess(reason=>'Split Locations are not properly supported by bioperl-bicorba at this time');
-    } else {
+	foreach my $loc ( $location->sub_Location() ) {
+	    push @locations, &_buildlocations($loc);
+	}	
+    } else {     
 	my($startpos,$endpos);
-	if(  $location->isa('Bio::Location::Fuzzy') ) { 
-	    throw org::biocorba::seqcore::UnableToProcess(reason=>'Fuzzy Locations are not properly supported by bioperl-bicorba at this time');
-	} else {
-	    $startpos = { position => $location->start,
-			  extension => 0,
-			  fuzzy => 'EXACT' };
-	    $endpos = { position => $location->end,
-			extension => 0,
-			fuzzy => 'EXACT' };
-	    
+	my $s = defined $location->start ? $location->start : 
+	defined $location->min_start ? $location->min_start :
+	    $location->max_start;
+	
+	my $e = defined $location->end ? $location->end : 
+	    defined $location->min_end ? $location->min_end :
+		$location->max_end;
+	
+	my $s_ext = 0;
+	if( defined $location->max_start && 
+	    defined $location->min_start ) {
+	    $s_ext = $location->max_start - $location->min_start;
 	}
+	
+	my $e_ext = 0;
+	if( defined $location->max_end && 
+	    defined $location->min_end ) {
+	    $s_ext = $location->max_end - $location->min_end;
+	}	
+	
+	$startpos = { position => $s,
+		      extension => $s_ext,
+		      fuzzy => $FUZZYCODES{$location->start_pos_type} };
+	
+	$endpos = { position => $e,
+		    extension => $e_ext,
+		    fuzzy => $FUZZYCODES{$location->end_pos_type} };
 	push @locations, { start => $startpos,
 			   end   => $endpos,
 			   strand => $location->strand };
     }
-    
-    return [@locations];
+    return @locations;
 }
 
 =head2 PrimarySeq_is_available

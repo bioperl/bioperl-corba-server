@@ -95,7 +95,6 @@ sub new {
     return $self;
 }
 
-
 sub start { 
     my ($self) = @_;
     open(OUT, ">" . $self->{'_ior'}) || 
