@@ -64,6 +64,7 @@ package Bio::CorbaServer::PrimarySeq;
 
 use vars qw($AUTOLOAD @ISA);
 use strict;
+use Bio::Range;
 
 use Bio::CorbaServer::Base;
 

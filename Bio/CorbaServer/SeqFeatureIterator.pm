@@ -112,6 +112,12 @@ sub has_more {
 
 sub next {
     my ($self) = @_;
+
+    # check to be sure we still have items to return
+    if (! $self->has_more()) {
+	throw org::biocorba::seqcore::EndOfStream;
+    }
+    
     my $item = $self->_elements->[$self->{'_pointer'}];
     $self->{'_pointer'}++;
     my $s = new Bio::CorbaServer::SeqFeature('-poa' => $self->poa,

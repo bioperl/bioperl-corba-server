@@ -73,6 +73,7 @@ use strict;
 use Bio::CorbaServer::PrimarySeq;
 use Bio::CorbaServer::SeqFeature;
 use Bio::CorbaServer::SeqFeatureVector;
+use Bio::Range;
 
 @ISA = qw(POA_org::biocorba::seqcore::Seq Bio::CorbaServer::PrimarySeq);
 
@@ -228,5 +229,10 @@ sub get_PrimarySeq {
 					      '-seq' => $self->_seq->primary_seq);
     return $s->get_activated_object_reference();
 }
+
+
+
+
+
 
 

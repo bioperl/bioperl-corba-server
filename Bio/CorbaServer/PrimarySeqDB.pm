@@ -119,7 +119,7 @@ sub name {
 
 sub version {
     my $self = shift;
-    return $self->seqdb->_version;
+    return $self->_seqdb->_version;
 }
 
 =head2 get_PrimarySeqVector
@@ -159,11 +159,11 @@ sub get_PrimarySeqVector {
 sub get_PrimarySeq {
     # throws (UnableToProcess)
     my ($self,$id) = @_;
-    my $seq = $self->seqdb->get_PrimarySeq_by_primary_id($id);
-    
+    my $seq = $self->_seqdb->get_PrimarySeq_by_primary_id($id);
     if( defined $seq ) {
+	my $primary_seq = $seq->primary_seq();
 	my $servant = new Bio::CorbaServer::PrimarySeq('-poa' => $self->poa, 
-						'-seq' => $seq);
+						'-seq' => $primary_seq);
 	return $servant->get_activated_object_reference;
     } else {
 	throw org::biocorba::seqcore::UnableToProcess

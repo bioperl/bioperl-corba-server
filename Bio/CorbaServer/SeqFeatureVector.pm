@@ -116,7 +116,12 @@ sub elementAt {
 	throw org::biocorba::seqcore::OutOfRange 
 	    reason => "index $index is out of range (0,".$self->size.").";
     }
-    return $self->{'_elements'}->[$index];
+
+    my $item = $self->{'_elements'}->[$index];
+    my $s = new Bio::CorbaServer::SeqFeature('-poa' => $self->poa,
+ 					     '-seqfeature' => $item);
+    
+    return $s->get_activated_object_reference;
 }
 
 =head2 iterator
