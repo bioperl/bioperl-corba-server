@@ -1,5 +1,9 @@
 Revision History for BioCorbaServer modules
 
+May 2000
+	Jason Stajich finished most of the wrapper modules, worked on
+	Bio::CorbaClient code and began java and python implementations.
+
 Apr 2000 
 	Jason Stajich starts writing wrapper methods around various 
 	Bioperl modules to make them CORBA accessible.  Updated 
