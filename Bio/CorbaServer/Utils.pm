@@ -70,7 +70,7 @@ use Bio::Location::Fuzzy;
 use Bio::Location::Split;
 @ISA = qw(Exporter);
              # functions
-@EXPORT_OK = qw(create_Bioperl_location_from_BSANE_location
+@EXPORT_OK = qw(create_Bioperl_location_from_BSANE_location		
 		create_BSANE_location_from_Bioperl_location
 		%StrandType %SeqType %FuzzyType %SeqFeatureLocationOperator);
 BEGIN { 
@@ -166,7 +166,7 @@ sub create_BSANE_location_from_Bioperl_location {
     my ($location) = @_;
     return undef if( ! $location );
     my $splittype = $SeqFeatureLocationOperator{'NONE'};
-    my $locations = undef;
+    my $locations = [];
 
 
     if( $location->isa('Bio::Location::SplitLocationI') ) {
