@@ -99,7 +99,7 @@ The rest of the documentation details each of the object methods. Internal metho
 
 
 package Bio::CorbaServer::SeqDB;
-use vars qw($AUTOLOAD @ISA);
+use vars qw(@ISA);
 use strict;
 
 # Object preamble - inherits from Bio::CorbaServer::PrimarySeqDB
@@ -107,9 +107,35 @@ use Bio::CorbaServer::PrimarySeqDB;
 use Bio::CorbaServer::PrimarySeqIterator;
 use Bio::CorbaServer::Seq;
 
-@ISA = qw(POA_org::biocorba::seqcore::SeqDB Bio::CorbaServer::PrimarySeqDB );
+@ISA = qw(POA_bsane::collection::SeqDB  Bio::CorbaServer::Base );
 
-# new is defined by PrimarySeqDB
+
+=head1 bsane::collection methods
+
+=head1 BioSequenceIdentifierResolver interface
+
+=head2 resolve
+
+ Title   : resolve
+ Usage   : $seq = $obj->resolve($id)
+ Function: Returns a BioSequence for a given id
+ Returns : seqcore::BioSequence
+ Args    : string -> identifier
+
+=cut
+
+sub resolve{
+   my ($self,@args) = @_;
+   
+   my $seq = $self->_seqdb->get_Seq_by_acc($id);
+   if( ! $seq ) { 
+       $seq = $self->_seqdb->get_Seq_by_id($id)
+   }
+   
+   my $seqobj = new Bio::CorbaServer::Seq('-seq' => $seq,
+					   '-poa' => $self->poa);
+   return $seqobj->->get_activated_object_reference();
+}
 
 =head1 SeqDB Interface Routines
 

@@ -73,17 +73,18 @@ use Bio::CorbaServer::Base;
 use Bio::CorbaServer::SeqFeatureCollection;
 #use Bio::CorbaServer::AnnotationCollection;
 
-@ISA = qw( POA_bsane::seqcore::BioSequence Bio::CorbaServer::PrimarySeq  );
+@ISA = qw( POA_bsane::seqcore::BioSequence 
+	 Bio::CorbaServer::PrimarySeq  );
+
+=head2 BioSequence methods
 
 =head2 get_anonymous_sequence
 
  Title   : get_anonymous_sequence
- Usage   :
- Function:
- Example :
- Returns : 
- Args    :
-
+ Usage   : my $seq = $obj->get_anonymouse_sequence();
+ Function: Returns an anonymous sequence for a BioSequence
+ Returns : seqcore::AnonymouseSequence
+ Args    : none
 
 =cut
 
@@ -129,11 +130,10 @@ sub get_annotations {
 =head2 get_alphabet
 
  Title   : get_alphabet
- Usage   :
- Function:
- Example :
- Returns : 
- Args    :
+ Usage   : my $alphabet = $obj->get_alphabet();
+ Function: Retrieves the alphabet for this sequence
+ Returns : bsane::Alphabet 
+ Args    : none
 
 =cut
 
