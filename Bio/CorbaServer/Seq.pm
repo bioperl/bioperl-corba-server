@@ -76,7 +76,7 @@ use Bio::CorbaServer::PrimarySeq;
 use Bio::CorbaServer::SeqFeature;
 use Bio::CorbaServer::SeqFeatureIterator;
 
-@ISA = qw(Bio::CorbaServer::Base Bio::CorbServer::PrimarySeq);
+@ISA = qw(Bio::CorbaServer::Base Bio::CorbaServer::PrimarySeq);
 
 sub new {
     my $class = shift;
