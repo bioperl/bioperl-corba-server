@@ -85,9 +85,9 @@ sub new {
   my($class,@args) = @_;
 
   my $self = $class->SUPER::new(@args);
-  my ($self->{'_name'},
-      $self->{'_basis'},
-      $self->{'_value'}) = $self->_rearrange([qw(NAME BASIS VALUE)],@args);
+  ($self->{'_name'},
+   $self->{'_basis'},
+   $self->{'_value'}) = $self->_rearrange([qw(NAME BASIS VALUE)],@args);
   
   return $self;
 }
@@ -143,10 +143,9 @@ sub get_basis{
 
 =cut
 
-sub get_name{
+sub get_value{
    my ($self) = @_;
    return $self->{'_value'};
 }
-
 
 1;
