@@ -234,7 +234,6 @@ PrimarySeq interface methods implemented
 
 sub display_id {
     my $self = shift;
-    print "display id is being called\n";
     return $self->_seq->display_id;
 }
 

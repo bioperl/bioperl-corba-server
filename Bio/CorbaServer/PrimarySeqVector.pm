@@ -137,7 +137,6 @@ sub iterator {
     my ($self) = @_;
     my $iter = new Bio::CorbaServer::PrimarySeqIterator('-poa' => $self->poa, 
 							'-elements' => $self->_elements);
-    print "iter to return is $iter\n";
     my $id = $self->poa->activate_object($iter);
     my $temp = $self->poa->id_to_reference ($id);
 
