@@ -1,0 +1,433 @@
+//$Id: bsane.idl,v 1.1 2001-09-11 11:13:38 birney Exp $
+
+#ifndef _DS_LSR_BSANE_IDL_
+#define _DS_LSR_BSANE_IDL_
+
+#pragma prefix "omg.org"
+#include <types.idl>
+
+
+module bsane { 
+
+  /**
+   * Defines a method to instruct the server that the entity is no
+   * longer needed by the client. 
+   **/
+  interface Removable { 
+    void remove();    
+  };
+
+  /**
+   * There is a need for a data type to indicate an entity's identity
+   * in very many situations. In most cases, this need is, or can be
+   * addressed by using a string type. The advantages are that it is
+   * simple, lightweight, and used universally throughout the realm of
+   * computing (and indeed outside). However, the risk of using
+   * strings is that they can be too flexible, both in terms of syntax
+   * and semantics. This easily results in the lack of
+   * interoperability.  To allow strings, yet mitigate their potential
+   * for abuse, this standard uses the syntax convention of
+   * CosNaming::StringName as described in the Interoperable Naming
+   * service. This convention is mainly a syntactical one; in no way
+   * is the use of a naming service implementation required or implied
+   * (but it is not precluded either).
+   **/
+  typedef string Identifier;
+  typedef sequence<Identifier> IdentifierList;
+
+
+  /** 
+   * Thrown if request is too large for server to handle.
+   * @see seqcore::AnonymousSequence
+   **/ 
+  exception RequestTooLarge {
+    string reason;
+    unsigned long suggested_size;
+  };
+
+  /**
+   * Exception is raised if iterator becomes invalid, for example, its
+   * content has changed during the read.
+   **/
+  
+  exception IteratorInvalid {
+    string reason;
+  };
+
+  /** 
+   * The exception is raised if attribute of entity does not exist 
+   **/
+
+  exception DoesNotExist { 
+    string reason; 
+  };
+
+  /**
+   * The IdentifierDoesNotExist exception is raised for cases where
+   * the database and the identifier within the database can be
+   * resolved but the Identifier is not present. <p>
+   * 
+   * Returns the Identifier that could not be found.
+   **/
+  //NOTE: "inherit" from DoesNotExist
+  exception IdentifierDoesNotExist { 
+    Identifier id;
+  };
+
+  /** 
+   * The IdentifierNotResolvable exception is raised for cases where
+   * database and the identifier within the database cannot be
+   * resolved such that the Identifier cannot even be searched for. <p>
+   * 
+   * Returns the Identifier that could not be resolved and a string
+   * containing the reason resolution was not possible.
+   **/
+  exception IdentifierNotResolvable {
+    Identifier id;
+    string reason;
+  };
+
+
+
+  /**
+   * The IdentifierNotUnique exception is raised for cases when the
+   * Identifier specification is ambiguous and returns more than one
+   * object.
+   **/ 
+  exception IdentifierNotUnique {
+    /** the non-unique Identifier **/
+    Identifier id;
+    /** Identifiers for all objects that id identifies. **/
+    IdentifierList ids;
+  };
+  
+  exception OutOfBounds {
+    string reason; 
+  };
+  
+  exception IllegalSymbolException {
+    string reason;
+  };
+
+  /*
+   * ALIASES and STRUCTS
+   * =================== */
+
+  typedef sequence<string> StringList;
+  typedef short BasisDef;
+
+  struct NameValuePair { 
+    string name;
+    any value;
+  };
+  typedef sequence<NameValuePair> NameValuePairList;
+    
+  /*
+   * INTERFACES
+   */
+  interface Annotation;
+  interface Iterator;
+
+  typedef sequence<Annotation> AnnotationList;
+
+  /**
+   * AnnotationCollection contains Annotations, which belongs to a
+   * Annotatable entity.  Note: life-cycle of the collection is coupled
+   * with life-cycle of of owner entity (e.g. BioSequence).<p>
+   *
+   * @see seqcore::SeqFeatureCollection
+   **/
+  interface AnnotationCollection {
+
+    /**
+     * Number of annotations in collection
+     **/
+    unsigned long get_num_annotations();
+
+    AnnotationList  get_annotations(
+				    in unsigned long how_many,
+				    out Iterator the_rest);
+    /**
+     * Provides access to the annotations by name. Can raise
+     * IdentifierNotResolvable exception if the name is not part
+     * of controlled vocabulary in the context of owner entity.
+     **/
+    AnnotationList get_annotations_by_name( in string name) 
+      raises( IdentifierNotResolvable) ;
+  };
+
+  /** 
+   * Basis interface declares constants that are used to specify
+   * whether an Annotation or Sequence originated from an experimental
+   * result or a computational analysis, such as from the application
+   * of a sequence analysis program.
+   * 
+   * NOTE: Use prefix BASIS to avoid collisions in names as in the BSA?
+   **/ 
+  interface Basis {
+
+    /** NOT_KNOWN should be used in all cases not indicated below **/
+    const BasisDef NOT_KNOWN=0;
+    /** EXPERIMENTAL should be used to indicate an experimental result
+     **/
+    const BasisDef EXPERIMENTAL=1;
+    /** 
+     * EXPERIMENTAL is used to indicate a computational analysis, such
+     * as from the application of a sequence analysis program.
+     **/
+    const BasisDef COMPUTATIONAL=2;
+    /**
+     * Any result determined both experimentally and computationally
+     * should use BOTH
+     **/
+    const BasisDef BOTH=3;
+
+    /**
+     * BASIS_NOT_APPLICABLE should be used to indicate that Basis
+     * doesn't apply.
+     **/
+
+    const BasisDef NOT_APPLICABLE=4;
+  };
+  
+  /**
+   * Annotatable
+   *
+   * interface defines an entity which has AnnotationCollection
+   **/
+  interface Annotatable  {
+    AnnotationCollection get_annotations() ;
+  };
+
+  /**
+   * Identifiable is a base class for entities, which have existence
+   * (identity) and life cycle (they are Removable) of their own.
+   **/
+  interface Identifiable : Removable {
+    /**
+     * Unique id of entity. 
+     **/
+    Identifier get_id();
+    /**
+     * Non unique descriptive name of enity. 
+     **/
+    string get_name();
+    string get_description();
+    BasisDef get_basis();
+  };
+  typedef sequence<Identifiable> IdentifiableList;
+
+  /** 
+   * Annotation interface defines an annotation that could, in
+   * principle, be associated with any bio-object that requires
+   * description using name-value pairs.
+   *
+   * @see seqcore::SeqFeature
+   **/
+  interface Annotation : Removable {
+
+    /**
+
+     * The name attribute specifies the general type of the annotation
+     * that is contained in the value attribute that contains the
+     * annotation itself. The value is of type any and therefore could
+     * contain anything from a block of free text to a specialized
+     * datatype.
+     **/
+    string get_name();  
+
+    /** 
+     * Annotation has a basis attribute, which specifies whether the
+     * annotation originated from an experimental result
+     * (EXPERIMENTAL) or a computational analysis (COMPUTATIONAL),
+     * such as from the application of a sequence analysis
+     * program. Basis provides for a coarse-grained classification of
+     * an Annotation.
+     **/
+    BasisDef get_basis(); 
+    
+    /**
+     * The value attribute contains the annotation itself.
+     **/
+    any get_value();
+      
+  };
+
+  /**
+   * Iterator
+   **/
+  interface Iterator : Removable {
+
+    /** 
+     * The next() operation gets the next Annotation in its out
+     * parameter the_octet and returns a boolean value. If the
+     * iterator is at the end of the set, it returns FALSE and sets
+     * the output the_annotation parameter to null.<P>
+     * 
+     * Raises IteratorInvalid if the iterator is no longer valid (e.g.,
+     * the underlying collection has changed). 
+     **/
+    boolean next(out Object the_object)
+      raises(IteratorInvalid);
+
+    /**
+     * next_n() returns Objects in the ObjectSeq out parameter
+     * objects, containing at most the number specified in the first
+     * parameter (how_many) and returns a boolean value directly. When
+     * it is at the end of the set it returns FALSE and the
+     * annotations parameter will have length zero. In all cases the
+     * length of annotations will be the minimum of how_many and the
+     * number of elements remaining.
+     **/
+    boolean next_n(in unsigned long how_many, 
+		   out Types::ObjectSeq objects)
+      raises(IteratorInvalid);
+    /** reset() sets the iterator to the start of the set. **/
+    void            reset();
+  };
+    
+  /**
+   * OctectIterator
+   **/
+  interface OctetIterator : Removable {
+	
+    /** 
+     * The next() operation gets the next octet in its out parameter
+     * the_octet and returns a boolean value. If the iterator is at
+     * the end of the set, it returns FALSE and sets the output
+     * the_annotation parameter to null.<P>
+     * 
+     * Raises IteratorInvalid if the iterator is no longer valid
+     * (e.g., the underlying collection has changed).
+     **/
+    boolean next(out Object the_object)
+      raises(IteratorInvalid);
+
+    /**
+     * next_n() returns octets in the OctetSeq out parameter octets,
+     * containing at most the number specified in the first parameter
+     * (how_many) and returns a boolean value directly. When it is at
+     * the end of the set it returns FALSE and the annotations
+     * parameter will have length zero. In all cases the length of
+     * annotations will be the minimum of how_many and the number of
+     * elements remaining.
+     **/
+    boolean next_n(in unsigned long how_many, 
+		   out Types::OctetSeq octets);
+
+    /** reset() sets the iterator to the start of the set. **/
+    void reset();
+  };
+    
+  interface Alphabet;
+  typedef sequence<Alphabet> AlphabetList;
+  
+  interface Symbol;
+  typedef  sequence<Symbol> SymbolList;
+
+  /** 
+   * Alphabet contains set of symbols, which can be concatenated to
+   * form symbol lists. Sequence string, for example, is stringified
+   * representation of the symbol list (tokens of symbols).
+   **/
+  interface Alphabet : Identifiable, Annotatable { 
+
+    /**
+     * List of symbols, which make up this
+     * alphabet. 
+     **/
+    SymbolList get_symbols();
+    
+    /**
+     * Sub-alphabets. E.g. codons made from DNAxDNAxDNA alphabets 
+     **/
+    AlphabetList  alphabets();
+    
+    boolean contains( in Symbol s);
+    
+    /**
+     * Resolve symbols from the token string.
+     **/
+    SymbolList to_symbol(in string tokens) 
+      raises ( IllegalSymbolException) ;
+    
+    /**
+     * Convinience method, which returns gap symbol that do not
+     * match with any other symbols in the alphabet.
+     **/
+    Symbol get_gap_symbol() raises ( DoesNotExist) ;
+     
+    /**
+     * Returns a ambiguity symbol, which represent list of
+     * symbols. All symbols in a list must be members of
+     * this alphabet otherwise IllegalSymbolException is
+     * thrown.
+     **/
+    Symbol get_ambiguity( in SymbolList symbols) 
+      raises( IllegalSymbolException) ;
+     
+    /**  
+     * Returns a Symbol, which represents ordered list of symbols
+     * given as a parameter. Each symbol in the list must be member of
+     * different sub-alphabet in the order defined by the alphabets
+     * attribute. For example, codons can be represented by a compound
+     * Alphabet of three DNA Alphabets, in which case the get_symbol(
+     * SymbolList[ a,g,t]) method of the Alphabet returns Symbol for
+     * the codon agt.<p>
+     *
+     * IllegalSymbolException is raised if members of symbols
+     * are not Symbols over the alphabet defined by
+     * get_alphabets()-methid
+     **/
+    Symbol get_symbol(in SymbolList symbols)  
+      raises(IllegalSymbolException) ;
+     
+  };
+  
+
+
+  /**
+   * Symbol represents a single token in the sequence. Symbol can have
+   * multiple synonyms or matches within the same Alphabet, which
+   * makes possible to represent ambiguity codes and gaps.<p>
+   * 
+   * Symbols can be also composed from ordered list other symbols. For
+   * example, codons can be represented by single Symbol using a
+   * compound Alphabet made from three DNA Alphabets.
+   **/
+  interface Symbol { 
+
+    /**
+     * Descriptive name for the symbol 
+     **/
+    string get_name();
+    /**
+     * Token for the symbol. E.g. letter A, G, T or C in a DNA
+     * alphabet.
+     **/
+    string get_token();
+    /** 
+     * List of Symbols that this symbol is composed from. 
+     **/
+    SymbolList get_symbols(); //moved from the BasisSymbol
+    /** 
+     * (Sub) alphabet of symbols matched by this symbol including
+     * the symbol itself (i.e. if symbol is DNA ambiguity code W
+     * then the matches contains symbols for W and T) 
+     **/
+    Alphabet get_matches();
+  };
+
+  /**
+   * Marker interface which represents a Symbol, which is not
+   * ambiguous, i.e., their matches attribute has an Alphabet, which
+   * contain just that one symbol.  Single DNA nucleotide, codon,
+   * amino-acid are examples of AtomicSymbols
+   **/
+  interface AtomicSymbol : Symbol {
+    
+  };
+  
+  
+};
+#endif // _DS_LSR_BSANE_IDL_

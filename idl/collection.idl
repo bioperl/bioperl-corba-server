@@ -1,0 +1,104 @@
+//$Id: collection.idl,v 1.1 2001-09-11 11:13:38 birney Exp $
+#ifndef _DS_LSR_COLL_IDL_
+#define _DS_LSR_COLL_IDL_
+
+#pragma prefix "omg.org"
+
+#include <bsane.idl>
+#include <seqcore.idl>
+#include <comparison.idl>
+
+module bsane { 
+    
+  /**
+   * The module contains interfaces for basic biological collections
+   **/
+  module collection { 
+    
+    /** is this exception needed with resolve()-method??: took from EMBL IDL**/
+    exception Superceded { IdentifierList identifiers; };	
+    
+    /**
+     * The BioSequenceIdentifierResolver provides a mechanism to
+     * retrieve the actual BioSequence object from a collection
+     * search, using the Identifier string.<p>
+     * 
+     * NOTE: Do we need general IdentifiableResolver...<p>
+     *
+     * @since BSA
+     **/
+    interface BioSequenceIdentifierResolver { 
+      
+      /** 
+       * Resolve the sequence identifier. Raises IdentifierDoesNotExist
+       * exception if sequence do not exist and
+       * IndetifierNotResolvable if the identifier is not
+       * valid. Identifier is not valid if its syntax is not OK
+       * or it contain, for example, wrong database id. NOTE:
+       * The database id can be obtained from the
+       * SequenceDatabase interface (id-attribute inherited
+       * from the Identifiable)
+       *
+       * Raises IdentifierNotUnique if the Identifier specification is
+       * ambiguous and returns more than one object.
+       *
+       * NOTE: Use Superceded-execption to notify that entry has
+       * changed or merged with some other entry (preivious Ids are in
+       * exception)???
+       **/
+		
+      seqcore::BioSequence resolve( in Identifier id ) 
+	raises ( IdentifierDoesNotExist, IdentifierNotResolvable, IdentifierNotUnique); 
+      
+    };
+    
+    
+    /**
+     * Represents sequence collections from EST libraries to sequence
+     * databases etc...  The identifier of the colletion (inherited from 
+     * the Identifiable) must be consistent with the identifiers of
+     * sequences.
+     * 
+     * @since BSANE 0.1
+     **/
+    interface BioSequenceCollection : 
+      BioSequenceIdentifierResolver, Identifiable, Annotatable  { 
+      
+      /** Uses the list/iterator hybrid to provide access to the
+       * Seqs.  A list of no more than how_many elements is
+       * returned as the direct result.  The remaining elements, if any,
+       * are available through the iterator returned in the out
+       * parameter. RequestTooLarge exception is throw if client 
+       * asks too much.
+       *
+       * NOTE: Changed from AnonymousSequence to BioSequence ...also resolver
+       **/
+      seqcore::BioSequenceList  get_seqs( in unsigned long how_many, 
+						out Iterator the_rest);
+      
+      
+    };
+    
+    interface TreeNode;
+    typedef sequence <TreeNode>TreeNodeList;
+
+    /**
+     * TreeNode represents a general tree node with a parent and
+     * children.<p>
+     *
+     * NOTE: move outside the "Bio" module, rename to AbstractTreeNode
+     *
+     * @since BSANE 0.1
+     **/
+    interface TreeNode { 
+      
+      TreeNode get_parent();
+      TreeNodeList get_children ( in unsigned long how_many, 
+				  out Iterator the_rest) ;
+      
+    };
+
+  };
+};
+
+#endif // _DS_LSR_COLL_IDL_

@@ -1,0 +1,22 @@
+#ifndef TYPES_IDL
+#define TYPES_IDL
+
+// These definitions are part of ORB... should include the idl
+// file from the ORB distribution
+#pragma prefix "omg.org"
+
+module Types {
+  
+    //Note: add ObjectSeq
+    typedef sequence<Object> ObjectSeq;   
+
+    typedef sequence<octet> OctetSeq;
+    //should use this
+    typedef sequence<string> StringSeq; 
+    
+    typedef sequence<unsigned long> ULongSeq;
+  
+};
+#endif
+
+

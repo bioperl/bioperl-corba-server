@@ -97,6 +97,8 @@ sub all_SeqFeatures {
     my ($self,$recurse) = @_;
     my @sf;
 
+    printf STDERR "Entering all_SeqFeatures...with $recurse\n";
+
     if( $recurse ) {
 	@sf = $self->_seq->all_SeqFeatures();
     } else { 
@@ -104,6 +106,7 @@ sub all_SeqFeatures {
     }
     my $s = new Bio::CorbaServer::SeqFeatureVector('-poa'   => $self->poa,
 						   '-items' => \@sf);
+    print STDERR "Returning $s with ",scalar(@sf),"\n";
     return $s->get_activated_object_reference();
 }
 

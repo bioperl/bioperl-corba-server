@@ -1,0 +1,279 @@
+//$Id: comparison.idl,v 1.1 2001-09-11 11:13:38 birney Exp $
+#ifndef _DS_LSR_BSANE_COMPA_IDL_
+#define _DS_LSR_BSANE_COMPA_IDL_
+
+#pragma prefix "omg.org.bsane"
+
+#include <bsane.idl>
+#include <seqcore.idl>
+
+module bsane { 
+
+  /**
+   * The module contains entities related to sequence comparison.
+   **/
+  module comparison { 
+    
+    
+    /** 
+     * An AlignmentElement corresponds to row in a traditional
+     * alignment. However to make it general, it is represented by a
+     * wrapper that allows any Object to be used in an Alignment. This
+     * approach allows the occurrence of one and the same Object in
+     * different rows (using the key), and also avoids the
+     * combinatorial problem of having every type of BioSequence
+     * duplicated just so it can be used in an Alignment. This
+     * approach allows other objects, not yet defined in this standard
+     * (e.g., hidden Markov models, to be used in the alignment). Most
+     * commonly, however, AlignmentElement will contain an element of
+     * type BioSequence.
+     *
+     * The key provides a unique reference to each AlignmentElement to
+     * be maintained between the client and the server of the
+     * Alignment. Notice that there may be more than one copy of a
+     * particular Object in the Alignment. There is no proscribed
+     * semantics to how the key is structured. The following provides
+     * examples of keys that could be used if the Objects are
+     * BioSequences.
+     *
+     **/
+  
+    interface AlignmentElement : Annotatable {
+      
+      /**
+       * The key provides a unique reference to each
+       * AlignmentElement to be maintained between the client
+       * and the server of the Alignment. Notice that there may
+       * be more than one copy of a particular Object in the
+       * Alignment.  There is no proscribed semantics to how the
+       * key is structured.  It is used in the get_seq_region()
+       * method in Alignment to provide a unique key for this
+       * AlignmentElement.
+       **/
+      string  get_key() ;
+    
+      /** 
+       * Original *unmodified* sequence that is being aligned. Usually
+       * this is one of subclasses of AnononymousSequence, which have
+       * the Alphabet that can be used to interpret "edited sequence"
+       * obtained from the Alignment interface.
+       *
+       **/
+      seqcore::AnonymousSequence  get_element(); 
+    
+      /**
+       * The seq_region represents the coordinates of a particular
+       * segment of the element (typically a BioSequence) that is
+       * aligned in the current Alignment, and that is considered one
+       * row in the Alignment. The coordinates are those of the
+       * original Object, not those of the Alignment. Notice that a
+       * particular Object might be represented more than once in the
+       * Alignment, and seq_region will provide the information as to
+       * the region of the Object that is used. The only valid
+       * SeqFeatureLocationOperator is JOIN.
+       * NOTE: muliple regions can be stored into sub_regions of
+       * SeqFeatureLocation
+       **/
+
+      seqcore::SeqFeatureLocation  get_region() ;
+    
+    };
+    typedef sequence<AlignmentElement> AlignmentElementList;
+  
+      
+    /**
+     * An Alignment is built from a set of correspondences of regions
+     * of sequences. In many cases the sequence region is only a
+     * single residue (a single base or a single amino acid) long, but
+     * this need not be. For example, a region of three DNA base
+     * pairs, representing a single amino acid, is a common region
+     * size. Each correspondence, which is called a column due to the
+     * common visual interpretation of an alignment, indicates that a
+     * particular region of one sequence is in some manner equivalent
+     * to set of particular regions on other sequences. The exact
+     * nature of this equivalence differs between different alignment
+     * methods, the most common being that these regions shared a
+     * common evolutionary ancestor. An alternative is that these
+     * regions were read from the same region of physical DNA, as in a
+     * DNA assembly.
+     *
+     * Alignment representation in sequence analysis has been
+     * dominated by text based representation of the
+     * correspondences as columns, with sequences running
+     * horizontally and each correspondence being represented by a
+     * column. Padding characters (often '-') are placed in
+     * sequences to align the residues with the correct
+     * correspondences in other sequences.
+     * 
+     * @see collection::SequenceCollection
+     * @see seqcore::AnonymousSequence
+     **/
+    interface Alignment {
+
+      /**
+       * An AlignType is a string that contains the type of the
+       * assumption made for this grouping of regions on
+       * sequences.  Several kinds of AlignTypes are given
+       * below.  Common alignment assumptions are provided as
+       * simple strings, with constant types as a starting point
+       * for a list of assumptions.  UNKNOWN indicates that no
+       * additional information is provided with the alignment,
+       * as would be the case for (e.g., Smith-Waterman
+       * alignments). PROTEIN indicates that this column does
+       * encode (part of) a protein. This can be either because
+       * it contains one or more amino acid residues, or more
+       * importantly, because the column consists of triplet(s)
+       * of DNA bases that encode amino acid(s). A very common
+       * region size is 1 for amino acids, and 3 for nucleotide
+       * triplets. However, more complex regions, e.g., a
+       * transmembrane protein sequence segment, are entirely
+       * possible.  SEQUENCE_ERROR indicates that the column
+       * contains bases that are considered to be erroneous.
+       * For example, in aligning a protein to a DNA sequence it
+       * possible to distinguish insertions due to evolutionary
+       * processes (PROTEIN) from insertions due to sequencing
+       * error (SEQUENCE_ERROR).  More involved alignment
+       * methods, for example hidden Markov models, could use
+       * the AlignType string to provide a sensible decoding of
+       * the alignment, and in these cases, the AlignType maybe
+       * more informative than the SeqFeatureLocation provided
+       * by the Alignment.
+       *
+       **/
+      typedef string AlignType;
+      typedef sequence <AlignType> AlignTypeList;
+
+      /* NOTE: not as other constants */
+      const AlignType PROTEIN = "PROTEIN";
+      const AlignType NON_PROTEIN = "NON_PROTEIN";
+      const AlignType SEQUENCE_ERROR = "SEQUENCE_ERROR";
+      const AlignType UNKNOWN = "UNKNOWN";
+    
+	//from bioJava 
+	//StringList get_keys();
+
+      unsigned long get_num_rows();
+      unsigned long get_num_columns();
+
+      /**
+       * This method allows the retrieval of AlignmentElements. They
+       * correspond to the rows in a traditional textually represented
+       * alignment; typically, the AlignmentElements are
+       * sequences. Uses the list/iterator hybrid to provide access to
+       * the AlignmentElements. A list of no more than how_many
+       * elements starting at start is returned as the direct
+       * result. The remaining elements, if any, are available through
+       * the iterator returned in the out parameter. This is
+       * particularly useful for Assemblies, where for a particular
+       * region, only a few sequences from thousands are relevant.
+       **/
+      AlignmentElementList get_alignment_elements ( in unsigned long start,
+						    in unsigned long how_many,
+						    out Iterator the_rest
+						    )       
+	raises (OutOfBounds);
+
+	//Do we need IndetifierNotResolvable and/or retype key into Identifier?
+      AlignmentElement get_alignment_element( in string key) 
+	raises (DoesNotExist);
+
+
+      /** The input parameter key unambiguously identifies an
+       * AlignmentElement within the Alignment. For each
+       * correspondence, each AlignmentElement will have a
+       * particular SeqFeatureLocation, returned by
+       * get_seq_region(). A null SeqFeatureLocation indicates
+       * that there is no region for this correspondence (i.e.,
+       * a gap).  Multiple gaps are represented by multiple
+       * SeqFeatureLocations. To find the "length" of a gap, it
+       * is necessary to check other correspondences in the
+       * column. A null SeqFeatureLocation contains no length
+       * information.  The input parameter the_interval
+       * represents an interval in the coordinates of the
+       * Alignment, not that of the underlying Object. If the
+       * interval includes a gap at the start, middle or end,
+       * the returned SeqFeatureLocation does not show it,
+       * because the start and end of it are in the coordinate
+       * system of the underlying Object which is unaware of any
+       * gaps. Instead, the corresponding segment of the
+       * underlying Object is indicated. It is assumed that the
+       * numbering of the correspondences is relevant, i.e.,
+       * that the second correspondence comes after the first,
+       * with all the intervals abutting. This allows an
+       * Interval of correspondences to be a valid concept.
+       **/
+      seqcore::SeqFeatureLocation get_seq_region ( in string key,
+						   in seqcore::SeqFeatureLocation the_interval
+						   )			
+	raises (OutOfBounds, DoesNotExist,  
+		seqcore::SeqFeatureLocationOutOfBounds,
+		seqcore::SeqFeatureLocationInvalid);
+      
+      AlignType get_align_type_by_column ( in unsigned long col )			
+	raises (OutOfBounds);
+
+      /**
+       * Convenience method.  Returns edited sequence string of a
+       * sequence on a AlignmentElement.  Special chars can be
+       * resolved using the Alphabet of the original sequence.
+       *
+       * NOTE: check this AlignmentElement/AnonymousSequence
+       **/
+      string get_edited_sequence_string( in string key) 
+	raises (DoesNotExist);
+
+      /**
+       * Convenience method, which returns locations of gaps on a
+       * original unmodified sequence. Gaps are returned in a list of
+       * sub_regions. The start and end positions of top level
+       * SeqFeatureLocation indicates first and last gap on a
+       * sequence.  NOTE: check is the method needed 
+       **/
+      seqcore::SeqFeatureLocation get_gaps( in string key) 
+	raises (DoesNotExist);
+	
+
+    };		
+    typedef sequence <Alignment> AlignmentList;
+      
+    interface Assembly;
+    typedef sequence <Assembly> AssemblyList;	
+	
+    /**
+     * Assembly defines an entity used to represent a unique alignment
+     * of two or more sequences, which produce one or more contiguous
+     * consensus sequences (or consensus elements).<p>
+     *
+     * NOTE: Should this inherit from sequence collection / hash
+     * or Identifiable
+     **/
+    interface Assembly : Alignment { 
+      /** 
+       * List of consensus elements produced from the underlying
+       * fixed Assembly. This list can be empty if consensus
+       * elements are not available.
+       **/
+      AlignmentElementList get_consensus_elements();
+	
+      /** 
+       * Returns list of Assemblies which are linked with the
+       * Assembly. For example, assemblies which have sequence
+       * derived from same clone, but do not have connecting
+       * sequence between them.
+       * NOTES: Use iterator pattern?
+       **/
+      AssemblyList get_linked();
+	    
+
+    };
+
+
+	
+	
+  };
+  
+  
+  
+};
+
+#endif // _DS_LSR_BSANE_COMPA_IDL_

@@ -1,0 +1,381 @@
+//$Id: seqcore.idl,v 1.1 2001-09-11 11:13:38 birney Exp $
+#ifndef _DS_LSR_SEQCORE_IDL_
+#define _DS_LSR_SEQCORE_IDL_
+
+#pragma prefix "omg.org"
+
+#include <bsane.idl>
+
+module bsane { 
+  module seqcore { 
+
+    typedef short SeqFeatureLocationDef;    
+    typedef short StrandTypeDef;
+    interface  StrandType {
+      /** STRAND_NOT_KNOWN should be used in all cases not indicated
+       *   below. **/
+      const StrandTypeDef NOT_KNOWN=3;
+      /** STRAND_NOT_APPLICABLE should be used for regions of
+       *  AminoAcidSequences. **/
+      const StrandTypeDef NOT_APPLICABLE=2;
+      /** STRAND_PLUS should be used to indicate the original
+       * plus-strand of a NucleotideSequence. **/
+      const StrandTypeDef PLUS=1;
+      /** STRAND_MINUS should be used to indicate the reverse
+       * complement of the plus-strand of a NucleotideSequence. **/
+      const StrandTypeDef MINUS=-1;
+      /** STRAND_BOTH should be used to indicate both strands of a
+       * double-stranded NucleotideSequence. **/
+      const StrandTypeDef BOTH=0;
+    };
+
+    exception ReadingFrameInvalid {
+      string reason;
+    };
+    
+    /** 
+     * SeqType interface declares constants for different sequence
+     * types.  Note that the sequence type must be consistent with the
+     * sequence alphabet. 
+     * @see BioSequence @see AnonymousSequence @see
+     * Alphabet
+     **/
+    typedef short SeqTypeDef ;
+    interface SeqType  {
+      const SeqTypeDef PROTEIN = 0;
+      const SeqTypeDef DNA = 1;
+      const SeqTypeDef RNA = 2;
+      const SeqTypeDef NOT_KNOWN = -1;
+    };
+    
+    /**
+     * A interface declaring type codes for different types of
+     * fuzziness possible for a position on a biological sequence.
+     **/
+    typedef short FuzzyTypeDef ;
+    interface FuzzyType  {
+      /** Position is 'exact'. **/
+      const FuzzyTypeDef  EXACT = 1;
+      
+      /** Exact position is unknown, but is within the range specified,
+       * e.g. for ((1.2)..100), the position is 1 or 2 for the start
+       * position of the region. **/
+      const FuzzyTypeDef WITHIN = 2;
+      
+      /** Exact position is between two of the positions in the range
+       * specified, e.g. for (1^2), the position is between bases 1 and
+       * 2. **/
+      const FuzzyTypeDef BETWEEN = 3;
+      
+      /** Exact lower boundary of position is unknown, but previous to
+       * the position specified, e.g. for (<10..100), the position
+       * starts before 10 for the start position of the region. **/
+      const FuzzyTypeDef BEFORE = 4;
+      
+      /** Exact upper boundary of position is unknown, but following the
+       * position specified, e.g. for (>10..100), the position starts
+       * after 10 for the start position of the region. **/
+      const FuzzyTypeDef AFTER = 5;
+    };
+
+    /** A interface declaring type codes for region operators.
+     * @see SeqFeature
+     **/
+    typedef short SeqFeatureLocOpDef;
+    interface SeqFeatureLocationOperator  {
+      const SeqFeatureLocOpDef NONE=0;
+      const SeqFeatureLocOpDef JOIN=1;
+      const SeqFeatureLocOpDef ORDER=3;      
+    };
+    
+    /**
+     * AnonymousSequence is a light weight sequence interface, which define
+     * basic accessor methods for token strings.
+     *
+     * @see BioSequence
+     **/ 
+    interface AnonymousSequence : Removable { 
+      
+      unsigned long get_length();
+      
+      /**  type of sequence. See: SeqType **/
+      SeqTypeDef get_type(); 
+      
+      /** Return whether the sequence is circular or linear **/
+      boolean is_circular();
+      
+      /** 
+       * Return the sequence as a string.  or rises
+       * RequestTooLarge exception if the sequence is too long
+       * for server to handle.  
+       **/
+      string seq() raises ( RequestTooLarge ) ; 
+
+      /** NOTE use FeatureLocation (rename if first to region)**/
+      string sub_seq ( in unsigned long start, in unsigned long end  ) 
+	raises (OutOfBounds, RequestTooLarge);
+
+    };
+    typedef sequence<AnonymousSequence>AnonymousSequenceList;
+    
+    /**
+     *
+     * A struct defining the properties of a position on a biological
+     * sequence.
+     * Rename to SeqPosition??
+     **/
+    struct SeqFeaturePosition {
+
+      /* Specifies the position of a SeqFeatureLocation on a 
+       * sequence.  **/
+      unsigned long position;
+	    
+      /* Specifies the extension of the position, e.g. for (1.3..12),
+       * the extension of the start position is 2. For (1..12), the
+       * extension of both the start and end positions is 0.
+       **/
+      unsigned long extension;
+      
+      /* Specifies the type code describing the fuzzy character of the
+       * position as specified in FuzzyTypeCode interface.
+       **/
+      FuzzyTypeDef fuzzy;
+    };
+
+    /** 
+     * A struct defining the properties of a SeqFeatureLocation object
+     * that specifies the region of a SeqFeatureLocation along a
+     * biological sequence using start and end positions. These
+     * positions may be 'fuzzy'. N.B. It is assumed that the region
+     * 'join(1..10,20)' is equivalent to 'join(1..10,20..20)'.
+     *
+     **/
+
+    struct SeqFeatureLocation  {
+      /** Specifies the (fuzzy) start position of a SeqFeatureLocation
+       * along a biological sequence.
+       **/
+      SeqFeaturePosition start;
+      
+      /** Specifies the (fuzzy) end position of a SeqFeatureLocation along a
+       * biological sequence.
+       **/
+      SeqFeaturePosition end;
+      
+      /** Specifices which strand of the Seq the SeqFeatureLocation
+       * lies on. 
+       **/
+      StrandTypeDef strand;          
+      
+      /** Region operator. NOTE: should be called location_operator?  **/
+      SeqFeatureLocOpDef region_operator;
+
+      // XXX temporarily commented out while having problems with
+      // orbit-python and recursive structs
+      //sequence <SeqFeatureLocation> sub_regions;
+      
+      Identifier id;
+
+    };
+    typedef sequence<SeqFeatureLocation> SeqFeatureLocationList;
+
+
+    //  	struct RemoteSeqFeatureLocation { 
+    //  	    Identifier id;
+    //  	    BasicSeqFeatureLocation location;
+    //  	};
+    //  	struct CompositeSeqFeatureLocation { 
+    //  	    sequence <SeqFeatureLocation> sub_regions;
+    //  	};
+    //  	union SeqFeatureLocation  switch (SeqFeatureLocationDef) {
+    //  	case 1: BasicSeqFeatureLocation basic;
+    //  	case 2: RemoteSeqFeatureLocation  remote;
+    //  	case 2: CompositeSeqFeatureLocation  composite;
+    //  	}
+
+	    
+    exception SeqFeatureLocationOutOfBounds {
+      SeqFeatureLocation invalid;
+      SeqFeatureLocation valid;
+    };
+    
+    exception SeqFeatureLocationInvalid {
+      string reason;
+    };
+
+  
+    /**
+     *
+     * For biomolecular sequences, Annotations are specialized to
+     * SeqFeatures to include sequence position information in the
+     * form of the SeqFeatureLocation attribute (see
+     * above). Essentially, this attribute indicates to which part of
+     * the sequence the annotation pertains, and is analogous to
+     * features in the DDBJ/EMBL/GenBank formats. Typical examples
+     * include gene, promoter region, and exons.
+     * 
+     **/
+    interface SeqFeature  : Annotation , Annotatable {
+    
+      /** Return the start in biological coordinates of the
+       * SeqFeatureLocation on the Seq (1 is the first base).
+       **/
+      unsigned long get_start();            
+    
+      /** Return the end in biological coordinates of the
+       * SeqFeatureLocation on the Seq (start=1:end=2 are the
+       * first two bases).
+       **/
+      unsigned long get_end();              
+    
+      /** Return the regions of this SeqFeatureLocation along
+       * its Seq using SeqFeatureLocation objects. This is
+       * similar to how biojava works.
+       **/
+      SeqFeatureLocationList get_locations() ;
+    
+	    
+      /** 
+       * Return the reference to AnonymousSeq that this
+       * Annotation belongs to. **/
+      AnonymousSequence get_owner_sequence() raises(DoesNotExist )  ;
+
+      /** 
+       * SeqFeature Annotation contains additional information
+       * in the form of so-called qualifiers, represented by
+       * the, which enables them to support many kinds of
+       * keyword controlled attributes. These properties are
+       * essential for covering the full spectrum of current
+       * annotation and feature information.  Used to be in
+       * Annotation... should be replaced by Annotatable
+       *
+       * NOTE: remove ... inheritance from Annotatable or 
+       * SequenceAnnotatable
+       **/
+      //NameValuePairList  get_qualifiers();
+
+    };
+    typedef sequence<SeqFeature> SeqFeatureList;
+
+      
+    /**
+     * Collection of SeqFeatures. Provides some basic query methods
+     * for getting the features by the SeqFeatureLocation.
+     **/
+    interface SeqFeatureCollection  : AnnotationCollection {
+    
+      /**
+       * Uses the list/iterator pattern to provide access to the
+       * Annotations.  A list of no more than how_many elements
+       * is returned as the direct result.  The remaining
+       * elements, if any, are available through the iterator
+       * returned in the out parameter. Only the SeqFeatures
+       * that overlap SeqFeatureLocation and have compatible
+       * StrandTypes will be returned.<p>
+       *
+       * Raises OutOfBounds if SeqFeatureLocation is out of bounds for
+       * the BioSequence who owns the collection.<p>  
+       *
+       * Raises SeqFeatureLocationInvalid if the SeqFeatureLocation is
+       * invalid.  Examples include an incorrect StrandType, or an
+       * invalid SeqFeatureLocation (e.g., one that has a wrong
+       * SeqFeatureLocationOperator or contains overlaps or
+       * circularities).
+       *
+       **/ 
+      SeqFeatureList  get_features_on_region(
+					     in unsigned long how_many,
+					     in SeqFeatureLocation seq_region,
+					     out Iterator the_rest)
+	raises(SeqFeatureLocationOutOfBounds, 
+	       SeqFeatureLocationInvalid);
+    
+      /**
+       * Gives number of annotations that fall between
+       * (inclusive) the seq_region are included.  Raises
+       * OutOfBounds if seq_region is out of bounds for this
+       * BioSequence who owns the collection.  Raises
+       * SeqFeatureLocationInvalid if the SeqFeatureLocation is
+       * invalid.  Examples include an incorrect StrandType, or
+       * an invalid composite SeqFeatureLocation (e.g., one that
+       * has a wrong SeqFeatureLocationOperator or contains
+       * overlaps or circularities).  
+       *
+       **/
+      unsigned long num_features_on_region(in SeqFeatureLocation 
+					   seq_region)
+	raises(SeqFeatureLocationOutOfBounds, 
+	       SeqFeatureLocationInvalid);
+	
+    };
+
+    /**
+     *
+     * Interface provides a method from getting SeqFeatureCollection.
+     * 
+     * NOTE: The interface also can guarantee that returned
+     * collections, SeqFeatureCollection and AnnotationCollection
+     * (inherited from Annotatable), are separate instances.
+     * 
+     * NOTE: new. check this with others
+     **/
+    interface AnnotatableSequence : Annotatable { 
+
+      /**  
+       * NOTE: reference of get_seq_features() != get_annotations() 
+       **/
+      SeqFeatureCollection get_seq_features();
+
+    };
+
+    /**
+     *
+     * Biological sequence with alphabet. BioSequence can contain
+     * special symbols, like gaps and ambiquity codes, which
+     * belongs to the alphabet.<p>
+     *
+     * NOTE: add SymnbolArray back...??
+     **/
+    interface BioSequence :  AnonymousSequence, 
+      Identifiable, AnnotatableSequence  {
+
+      /**
+       * Returns narrowed AnonymousSequence instance made from
+       * this PrimarySequence so that the PrimarySequence itself
+       * can be removed using the remove-method (inherited from
+       * Removable).
+       **/
+      AnonymousSequence get_anonymous_sequence() ;
+	    
+      Alphabet get_alphabet() ; //REMOVED: raises ( DoesNotExist );
+
+    };
+    typedef sequence<BioSequence> BioSequenceList;
+
+	
+    interface NucleotideSequence : BioSequence {
+
+      /** NOTE: RequestTooLarge-exception probably not needed **/
+      string reverse_complement ();
+      string reverse_complement_interval ( in seqcore::SeqFeatureLocation the_region )
+	raises (OutOfBounds);
+      string translate_seq ( in short reading_frame,
+			     out Types::ULongSeq stop_locations
+			     )			
+	raises (seqcore::ReadingFrameInvalid);
+      string translate_seq_region (
+				   in seqcore::SeqFeatureLocation seq_region,
+				   out Types::ULongSeq stop_locations
+				   )			
+	raises (OutOfBounds, seqcore::SeqFeatureLocationInvalid);
+    };
+      
+      
+  };
+  
+};
+
+
+#endif // _DS_LSR_SEQCORE_IDL_
+
+    
