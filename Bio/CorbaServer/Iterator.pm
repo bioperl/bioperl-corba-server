@@ -125,6 +125,35 @@ sub next {
     return (defined $item, $item);#->get_activated_object_reference();
 }
 
+=head2 next_n
+
+ Title   : next_n
+ Usage   : my @items = $iter->next_n;
+ Function: Returns the next N items
+ Returns : Array of N items
+ Args    : Number of items to return
+
+
+=cut
+
+sub next_n{
+   my ($self,$n) = @_;
+
+    # check to be sure we still have items to return
+    if (! $self->has_more()) {
+	return (0,undef);
+    }
+   my @items;
+   while( $n > 0 && $self->has_more() ) {
+       my $item = $self->_elements->[$self->{'_pointer'}];
+       $self->{'_pointer'}++;
+       $n--;
+       push @items, $item;
+   }
+   return (scalar @items, \@items );
+
+}
+
 =head2 _elements
 
  Title   : _elements
