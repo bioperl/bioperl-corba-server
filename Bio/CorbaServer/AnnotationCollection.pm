@@ -70,8 +70,6 @@ use strict;
 
 use Bio::CorbaServer::Base;
 
-BEGIN { print STDERR "Accessing this module\n"; };
-
 @ISA = qw( POA_bsane::AnnotationCollection Bio::CorbaServer::Base );
 
 =head2 new
