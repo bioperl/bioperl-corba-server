@@ -104,8 +104,7 @@ sub all_SeqFeatures {
     }
     my $s = new Bio::CorbaServer::SeqFeatureVector('-poa'   => $self->poa,
 							 '-items' => \@sf);
-    my $id = $self->poa->activate_object($s);	
-    return $self->poa->id_to_reference($id);
+    return $s->get_activated_object_reference();
 }
 
 =head2 get_SeqFeatures_by_type
@@ -132,8 +131,7 @@ sub get_SeqFeatures_by_type {
     }
     my $s = new Bio::CorbaServer::SeqFeatureVector('-poa'   => $self->poa,
 						  '-items' => \@feats_to_ret);
-    my $id = $self->poa->activate_object($s);	
-    return $self->poa->id_to_reference($id);
+    return $s->get_activated_object_reference();
 }
 
 =head2 get_SeqFeatures_in_region
@@ -168,8 +166,7 @@ sub get_SeqFeatures_in_region {
     }
     my $s = new Bio::CorbaServer::SeqFeatureVector('-poa'   => $self->poa,
 						   '-items' => \@feats_to_ret);
-    my $id = $self->poa->activate_object($s);	
-    return $self->poa->id_to_reference($id);
+    return $s->get_activated_object_reference();
 }
 
 =head2 get_SeqFeatures_in_region_by_type
@@ -208,8 +205,7 @@ sub get_SeqFeatures_in_region_by_type {
     }
     my $s= new Bio::CorbaServer::SeqFeatureVector('-poa'   => $self->poa,
 						  '-items' => \@feats_to_ret);
-    my $id = $self->poa->activate_object($s);	
-    return $self->poa->id_to_reference($id);
+    return $s->get_activated_object_reference();
 }
 
 =head2 get_PrimarySeq
@@ -230,8 +226,7 @@ sub get_PrimarySeq {
     my ($self) = @_;
     my $s =  new Bio::CorbaServer::PrimarySeq('-poa' => $self->poa,
 					      '-seq' => $self->_seq->primary_seq);
-    my $id = $self->poa->activate_object($s);
-    return $self->poa->id_to_reference($id);
+    return $s->get_activated_object_reference();
 }
 
 

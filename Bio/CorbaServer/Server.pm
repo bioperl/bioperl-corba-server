@@ -71,10 +71,9 @@ package Bio::CorbaServer::Server;
 
 use vars qw($AUTOLOAD @ISA);
 use strict;
-
-use Bio::Root::RootI;
-use Bio::CorbaServer::Base;
 use CORBA::ORBit idl => [ 'biocorba.idl' ];
+use Bio::Root::RootI;
+
 @ISA = qw ( Bio::Root::RootI );
 
 sub new { 

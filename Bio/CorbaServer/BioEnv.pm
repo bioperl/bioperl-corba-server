@@ -116,20 +116,8 @@ sub get_PrimarySeq_from_file {
 	my $servant = Bio::CorbaServer::PrimarySeq->new('-poa' => $self->poa, 
 							'-seq' => $seq);
 
-	print STDERR "Got a ",ref($servant),"... about to activate...\n" 
-	    if( $DEBUG);
-
-	my $id = $self->poa->activate_object ($servant);
-	
-        # seg faults if I don't touch id. Yikes
-	my $other = $id;
-	print STDERR "Got id $id - $other\n" if($DEBUG);
-	my $temp = $self->poa->id_to_reference($id);
-	
-	print STDERR "About to return servant\n" if($DEBUG);
-	return $temp;
+	return $servant->get_activated_object_reference;
     }
-
     die ("should never have got here!");
 }
 
@@ -166,11 +154,7 @@ sub get_PrimarySeqIterator_from_file {
 	    ('-poa' => $self->poa,
 	     '-seqio' => $seqio
 	     );
-        
-	my $id = $self->poa->activate_object($servant);
-        my $object = $self->poa->id_to_reference($id);
-        
-        return $object;
+	return $servant->get_activated_object_reference;
     }    
     die("Bad place to be.");
 }
@@ -210,19 +194,7 @@ sub get_Seq_from_file {
     } else {
 	my $servant = Bio::CorbaServer::Seq->new('-poa' => $self->poa, 
 						 '-seq' => $seq);
-
-	print STDERR "Got a ",ref($servant),"... about to activate...\n" 
-	    if( $DEBUG);
-
-	my $id = $self->poa->activate_object ($servant);
-	
-        # seg faults if I don't touch id. Yikes
-	my $other = $id;
-	print STDERR "Got id $id - $other\n" if($DEBUG);
-	my $temp = $self->poa->id_to_reference($id);
-	
-	print STDERR "About to return servant\n" if($DEBUG);
-	return $temp;
+	return $servant->get_activated_object_reference;
     }
 
     die ("should never have got here!");

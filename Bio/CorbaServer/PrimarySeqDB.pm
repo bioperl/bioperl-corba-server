@@ -142,9 +142,7 @@ sub get_PrimarySeqVector {
     }
     my $vector = new Bio::CorbaServer::PrimarySeqVector('-poa'=> $self->poa,
 							'-items' => \@obj);
-    my $id = $self->poa->activate_object($vector);
-    my $temp = $self->poa->id_to_reference ($id);
-    return $temp;
+    return $vector->get_activated_object_reference;
 }
 
 =head2 get_PrimarySeq
@@ -166,8 +164,7 @@ sub get_PrimarySeq {
     if( defined $seq ) {
 	my $servant = new Bio::CorbaServer::PrimarySeq('-poa' => $self->poa, 
 						'-seq' => $seq);
-	my $id = $self->poa->activate_object($servant);
-	return $self->poa->id_to_reference ($id);	
+	return $servant->get_activated_object_reference;
     } else {
 	throw org::biocorba::seqcore::UnableToProcess
 	    ( reason => ref($self)." could not find seq for $id");

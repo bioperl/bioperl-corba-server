@@ -134,8 +134,7 @@ sub iterator {
     my ($self) = @_;
     my $s = new Bio::CorbaServer::SeqFeatureIterator('-poa'   => $self->poa, 
 						     '-items' => $self->_elements);
-    my $id = $self->poa->activate_object($s);
-    return $self->poa->id_to_reference($id);
+    return $s->get_activated_object_reference();
 }
 
 =head2 _elements

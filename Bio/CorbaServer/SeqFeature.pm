@@ -224,8 +224,7 @@ sub sub_SeqFeatures {
     }
     my $s = new Bio::CorbaServer::SeqFeatureVector('-poa' => $self->poa,
 						   '-elements' => \@final);
-    my $id = $self->poa->activate_object($s);	
-    return $self->poa->id_to_reference($id);
+    return $s->get_activated_object_reference();
 }
 
 =head2 locations
@@ -299,8 +298,9 @@ sub PrimarySeq_is_available{
 sub get_PrimarySeq{
    my ($self) = @_;
    if( $self->PrimarySeq_is_available ) {
-       return new Bio::CorbaServer::PrimarySeq('-poa' => $self->poa,
+       my $s = new Bio::CorbaServer::PrimarySeq('-poa' => $self->poa,
 					       '-seq' => $self->_seqf->seq());
+       return $s->get_activated_object_reference();
    } else {
        throw org::biocorba::seqcore::UnableToProcess(reason=>'PrimarySeq is not available') ;
    }

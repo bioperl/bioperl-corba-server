@@ -13,12 +13,12 @@ $root_poa = $orb->resolve_initial_references("RootPOA");
 
 $seqio  = Bio::SeqIO->new( '-format' => 'fasta',-fh => \*STDIN );
 
-$servant = Bio::CorbaServer::PrimarySeqIterator->new($root_poa,$seqio,
-						     no_destroy => 1);
+$servant = Bio::CorbaServer::PrimarySeqIterator->new('-poa' => $root_poa,
+						     '-seqio' => $seqio,
+						     '-no_destroy' => 1);
 
 # this registers this object as a live object with the ORB
 my $id = $root_poa->activate_object ($servant);
-
 
 # we need to get the IOR of this object. The way to do this is to
 # to get a client of the object (temp) and then get the IOR of the

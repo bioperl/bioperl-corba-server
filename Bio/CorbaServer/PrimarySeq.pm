@@ -193,9 +193,8 @@ sub subseq {
 	$ret = $self->_seq->subseq($start,$end);
     };
     if( $@ ) {
-	throw org::biocorba::seqcore::RequestTooLarge
-
 	#set exception
+	throw org::biocorba::seqcore::RequestTooLarge(reason=>"parameters $start, $end were too large", suggested_size=>0);
     } else {
 	return $ret;
     }

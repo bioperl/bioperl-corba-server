@@ -95,9 +95,7 @@ sub get_Seq {
 	# data marshall object out	
 	my $servant = Bio::CorbaServer::Seq->new('-poa' => $self->poa, 
 						 '-seq' => $seq);
-	my $id = $self->poa->activate_object($servant);	
-	my $temp = $self->poa->id_to_reference($id);
-	return $temp;
+	return $servant->get_activated_object_reference;
     } else {
 	throw org::biocorba::seqcore::UnableToProcess
 	    ( reason => ref($self)." could not find seq for $id");	

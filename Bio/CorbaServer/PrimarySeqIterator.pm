@@ -64,6 +64,7 @@ use vars qw($AUTOLOAD @ISA);
 use strict;
 
 use Bio::CorbaServer::Base;
+use Bio::CorbaServer::PrimarySeq;
 
 @ISA = qw(POA_org::biocorba::seqcore::PrimarySeqIterator 
 	  Bio::CorbaServer::Base);
@@ -79,7 +80,7 @@ sub new {
     } elsif ( $items && ref($items) !~ /array/i ) {
 	throw org::biocorba::seqcore::UnableToProcess 
 	    reason => "initializing a $class with an invalid argument ($items) instead of an array of items";  
-    } elsif( $seqio && (! ref($seqio) || $seqio->isa('Bio::SeqIO') ) ) {
+    } elsif( !$seqio || !ref($seqio) || ! $seqio->isa('Bio::SeqIO') ) {
 	throw org::biocorba::seqcore::UnableToProcess 
 	    reason => "initializing a $class with an invalid argument for seqio, must a real Bio::SeqIO reference not ".ref($seqio).".";  
     } 
@@ -93,6 +94,16 @@ sub new {
     return $self;
 }
 
+=head2 has_more
+
+ Title   : has_more
+ Usage   : $self->has_more()
+ Function: has more elements to iterate towards
+ Returns : boolean
+ Args    : none
+
+=cut
+
 sub has_more {
     my ($self) = @_;
     if( defined $self->_seqio ) {
@@ -105,6 +116,16 @@ sub has_more {
 		$self->{'_pointer'} <= scalar @{$self->_elements} );
     }
 }
+
+=head2 next
+
+ Title   : next
+ Usage   : my $item = $self->next()
+ Function: returns next item in iterator list
+ Returns : Bio::CorbaServer::PrimarySeq
+ Args    : none
+
+=cut
 
 sub next {
     my ($self) = @_;
@@ -120,9 +141,7 @@ sub next {
 	$self->{'_pointer'}++;
 	$item = $self->_elements->[$self->{'_pointer'}];
     }
-    my $id = $self->poa->activate_object($item);
-    my $temp = $self->poa->id_to_reference ($id);
-    return $temp;
+    return $item->get_activated_object_reference();
 }
 
 =head2 _elements

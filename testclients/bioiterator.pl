@@ -13,10 +13,9 @@ close(F);
 
 $piterator = $orb->string_to_object($ior);
 
-
 while( $piterator->has_more == 1 ) {
     $seq = $piterator->next();
-    print "Got ",$seq->display_id,":",$seq->get_seq,"\n";
+    print "Got ",$seq->display_id,":",$seq->seq,"\n";
 }
 
 

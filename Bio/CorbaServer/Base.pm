@@ -152,6 +152,22 @@ sub reference_count {
 
 sub query_interface { return $_[0]; }
 
+=head2 get_activated_object_reference
+
+ Title   : get_activated_object_reference
+ Usage   : my $objstr = $obj->get_activated_object_reference()
+ Function: Activates the object to the format suitable for returning to 
+           a client -- does the CORBA activation and translation
+ Returns : corba string
+ Args    : none
+
+=cut
+
+sub get_activated_object_reference { 
+    my ($self) = @_;
+    my $id = $self->poa->activate_object($self);	
+    return $self->poa->id_to_reference($id);
+}
 sub _no_destroy {
     my($self,$value) = @_;
     if( defined $value || !defined $self->{'_no_destroy'}) {
@@ -160,4 +176,6 @@ sub _no_destroy {
     }
     return $self->{'_no_destroy'};
 }
+
+
 1;

@@ -85,10 +85,30 @@ sub new {
    return $self;
 }
 
+=head2 has_more
+
+ Title   : has_more
+ Usage   : $self->has_more()
+ Function: has more elements to iterate towards
+ Returns : boolean
+ Args    : none
+
+=cut
+
 sub has_more {
     my ($self) = @_;
     return( $self->{'_pointer'} < scalar @{$self->_elements} );
 }
+
+=head2 next
+
+ Title   : next
+ Usage   : my $item = $self->next()
+ Function: returns next item in iterator list
+ Returns : Bio::CorbaServer::PrimarySeq
+ Args    : none
+
+=cut
 
 sub next {
     my ($self) = @_;
@@ -96,8 +116,7 @@ sub next {
     $self->{'_pointer'}++;
     my $s = new Bio::CorbaServer::SeqFeature('-poa' => $self->poa,
 					     '-seqfeature' => $item);
-    my $id = $self->poa->activate_object($s);
-    return $self->poa->id_to_reference($id);
+    return $s->get_activated_object_reference;
 }
 
 =head2 _elements
