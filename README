@@ -1,5 +1,4 @@
 
-
 This distribution is for the bioperl CORBA server applications. You
 will need both bioperl and CORBA::ORBit to run this. (available on
 CPAN) which itself needs Error.pm.
@@ -7,6 +6,9 @@ CPAN) which itself needs Error.pm.
 README.bioperl-corba is the README shared with bioper-corba-client
 distribution about how the whole architecture hangs together. Read
 that first.
+
+This release supports the biocorba IDL 0.2 which is included in this
+distribution.
 
 This distribution has the following source directories:
 
@@ -21,9 +23,7 @@ testclients      - simple clients to test the servers are working.
 
 
 This code was started and mainly written by Ewan Birney 
-<birney@ebi.ac.uk>
-
-
+<birney@ebi.ac.uk> and Jason Stajich <jason@chg.mc.duke.edu>
 
 
 RUNNING THE TESTS 
@@ -33,4 +33,3 @@ Because the tests are dependant on a server being available it is
 necessary that the test servers and clients should be run rather than
 make test.  The only test - notest - will simply load all the 
 Bio::CorbaServer modules.
-
