@@ -224,7 +224,7 @@ sub get_locations {
     } 
 
     # recursively build the locations in case they are SplitLocations
-    my @locations = &_buildlocations($location);
+    my @locations = &create_BSANE_location_from_Bioperl_location($location);
     
     my $ref = [];
     push(@$ref,@locations);
@@ -256,62 +256,6 @@ sub get_owner_sequence{
    }
    return undef;
 }
-
-# for recursively getting all the locations
-
-sub _buildlocations {
-    my ($location) = @_;
-
-    print STDERR "Building a location with $location\n";
-
-    my @locations;
-    if( $location->isa('Bio::Location::SplitLocationI') ) {
-	foreach my $loc ( $location->sub_Location() ) {
-	    push @locations, &_buildlocations($loc);
-	}	
-    } else {     
-	my($startpos,$endpos);
-	my $s = defined $location->start ? $location->start : 
-	defined $location->min_start ? $location->min_start :
-	    $location->max_start;
-	
-	my $e = defined $location->end ? $location->end : 
-	    defined $location->min_end ? $location->min_end :
-		$location->max_end;
-	
-	my $s_ext = 0;
-	if( defined $location->max_start && 
-	    defined $location->min_start ) {
-	    $s_ext = $location->max_start - $location->min_start;
-	}
-	
-	my $e_ext = 0;
-	if( defined $location->max_end && 
-	    defined $location->min_end ) {
-	    $s_ext = $location->max_end - $location->min_end;
-	}	
-	
-	$startpos = { position => $s,
-		      extension => $s_ext,
-		      fuzzy => $FUZZYCODES{$location->start_pos_type} };
-	
-	$endpos = { position => $e,
-		    extension => $e_ext,
-		    fuzzy => $FUZZYCODES{$location->end_pos_type} };
-	 my $h = { 'start' => $startpos,
-		   'end'   => $endpos,
-		   'strand' => $location->strand };
-	push @locations,$h
-    }
-
-    print STDERR "Going to return with ",scalar(@locations),"\n";
-    foreach my $l ( @locations ) {
-	print STDERR "location $l ",$l->{'start'}," ",$l->{'end'},"\n";
-    }
-
-    return @locations;
-}
-
 # private methods
 
 sub _recurse_seqf {
