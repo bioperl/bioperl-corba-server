@@ -317,4 +317,23 @@ sub _version {
     return $self->{'_version'};
 }
 
+=head2 max_request_length
+
+ Title   : max_request_length
+ Usage   :
+ Function:
+ Example :
+ Returns : 
+ Args    :
+
+
+=cut
+
+sub max_request_length{
+   my ($self,@args) = @_;
+
+   return 10000;
+}
+
+
 1;
