@@ -41,7 +41,19 @@ try {
 	#print "loc is ", Dumper($loc),"\n";
 	print "feature count is ", $sfc->num_features_on_region($loc),"\n";
 
-	my ($list,$iter) = $sfc->get_features_on_region(2,&create_BSANE_location_from_Bioperl_location(new Bio::Location::Simple('-start' => 1, '-end' => $seq->get_length-1, '-strand' => 1 ) ));
+
+	my ($list,$fiter) = $sfc->get_features_on_region(2,&create_BSANE_location_from_Bioperl_location(new Bio::Location::Simple('-start' => 1, '-end' => $seq->get_length-1, '-strand' => 1 ) ));
+	my ($fstatus,$feature);
+	while( (($fstatus,$feature) = $fiter->next()) && $fstatus ) {
+	    print "start is ", $feature->get_start(), " end is ", $feature->get_end(), "\n";
+	    my $annotcol = $feature->get_annotations();
+	    if( defined $annotcol ) {
+		print  "annotation len is ", 
+		$annotcol->get_num_annotations(), "\n";
+	    } else { 
+		print "no annotations returned\n";
+	    }
+	}
     }
     my ($seqs,$iter) = $db->get_seqs(1);
     print "iter is $iter seqs are $seqs\n";
@@ -53,7 +65,7 @@ try {
 	}
     }
     
-    
+    print "annotations for seq are ", $seq->get_annotations(), "\n";
 
 } catch bsane::OutOfBounds with { 
     my $E = shift;
