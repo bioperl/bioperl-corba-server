@@ -17,11 +17,12 @@ print "seqdb is $seqdb\n";
 try {
     my $seq = $seqdb->resolve('U63596');
     print "seq is ", $seq->seq(), "\n";
+    print "name is ", $seq->get_id(), " ", $seq->get_name(), " ", $seq->get_description(), "\n";
     my $collection = $seq->get_seq_features();
     my $iter;
     my $annot_iter = $collection->get_annotations(1000,$iter);
     while( my $sf = $annot_iter->next() ) {
-	print "seqf is ", $sf->get_name(), " ", $sf->get_value, "\n";
+	print "seqf is ", $sf->get_name(), "\n";
     }
 } catch bsane::IdentifierDoesNotExist with {
     my $E = shift;
