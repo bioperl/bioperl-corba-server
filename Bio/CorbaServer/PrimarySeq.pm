@@ -149,15 +149,15 @@ sub version {
  Title   : display_id
  Usage   : $seq->display_id
  Function:
- Example :
  Returns : display id for sequence
- Args    :
+ Args    : none
 
 =cut
 
 sub display_id {
     my $self = shift;
-    return $self->_seq->display_id;
+    my $str = $self->_seq->display_id;
+    return $str;
 }
 
 =head2 accession_number
@@ -165,15 +165,15 @@ sub display_id {
  Title   : accession_number
  Usage   : $seq->accession_number
  Function:
- Example :
  Returns : accession number for sequence
- Args    :
+ Args    : none
 
 =cut
 
 sub accession_number {
     my $self = shift;
-    return $self->_seq->accession_number();
+    my $str = $self->_seq->accession_number();
+    return $str;
 }
 
 =head2 primary_id
@@ -181,15 +181,18 @@ sub accession_number {
  Title   : primary_id
  Usage   : $seq->primary_id
  Function:
- Example :
  Returns : primary id of sequence
- Args    :
+ Args    : none
 
 =cut
 
 sub primary_id {
     my $self = shift;
-    return $self->_seq->primary_id();
+    my $str = $self->_seq->primary_id();
+    if( $str =~ /hash\((0x[0-9a-f]+)\)/i ) {
+	$str = $1;
+    } 
+    return hex($str);
 }
 
 =head1 Private Methods

@@ -60,5 +60,4 @@ $orb->run;
 
 END { 
     unlink "$dir/$tst_index_file";
-    system("rm -f $dir/$tst_index_file");
 }

@@ -12,17 +12,25 @@ chomp $ior;
 close(F);
 
 my $db = $orb->string_to_object($ior);
-print "db is $db\n";
 my $vector = $db->get_PrimarySeqVector();
-print "vector is $vector\n";
 my $iter = $vector->iterator();
-print "iter is $iter\n";
 
-while ($iter->has_more ) {
-    my $seq = $iter->next;
-    print "display id = ", $seq->display_id,"\n\t  seq is",$seq->get_seq(),"\n";    
-}
-
+eval { 
+    while ($iter->has_more ) {    
+	my $seq = $iter->next;
+	print $seq->seq,"\n";
+	print "length is ", $seq->length, "\n";
+	my $subseq = $seq->subseq(1,$seq->length - 10 );
+	print "sub seq 1 .. ", $seq->length - 10 , " is ",
+	$subseq, ":", length($subseq),"\n"; 
+	print "accession is ", 
+	$seq->accession_number, "\n";
+	print "display id = ";
+	print $seq->display_id;
+	print "\n";
+#    "\n\t  seq is",$seq->get_seq(),"\n";    
+    }
+};    
 if( $@ ) {
     print "error\n";
 } else {

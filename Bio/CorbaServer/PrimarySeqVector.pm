@@ -80,7 +80,6 @@ sub new {
 	$items = [];
     }
     $self->_elements($items);
-    print "vector is $self\n";
     return $self;
 }
 
@@ -136,7 +135,7 @@ sub elementAt {
 sub iterator {
     my ($self) = @_;
     my $iter = new Bio::CorbaServer::PrimarySeqIterator('-poa' => $self->poa, 
-							'-elements' => $self->_elements);
+							'-items' => $self->_elements);
     return $iter->get_activated_object_reference();
 }
 

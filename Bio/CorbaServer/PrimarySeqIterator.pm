@@ -62,7 +62,7 @@ package Bio::CorbaServer::PrimarySeqIterator;
 
 use vars qw($AUTOLOAD @ISA);
 use strict;
-
+use Error;
 use Bio::CorbaServer::Base;
 use Bio::CorbaServer::PrimarySeq;
 
@@ -73,16 +73,18 @@ sub new {
     my ($class, @args) = @_;
     my $self = $class->SUPER::new(@args);
     my ($items, $seqio) = $self->_rearrange( [qw(ITEMS SEQIO)], @args);
-    if( $items && $seqio ) {
-	throw org::biocorba::seqcore::UnableToProcess 
-	    reason => "initializing $class with invalid arguments both seqio and ($items) were passed in, only 'seqio' or 'items' allowed";
-
+ 
+   if( $items && $seqio ) {
+	throw org::biocorba::seqcore::UnableToProcess( 
+	    reason => "initializing $class with invalid arguments both seqio and ($items) were passed in, only 'seqio' or 'items' allowed");
     } elsif ( $items && ref($items) !~ /array/i ) {
-	throw org::biocorba::seqcore::UnableToProcess 
-	    reason => "initializing a $class with an invalid argument ($items) instead of an array of items";  
-    } elsif( !$seqio || !ref($seqio) || ! $seqio->isa('Bio::SeqIO') ) {
-	throw org::biocorba::seqcore::UnableToProcess 
-	    reason => "initializing a $class with an invalid argument for seqio, must a real Bio::SeqIO reference not ".ref($seqio).".";  
+	throw org::biocorba::seqcore::UnableToProcess( 
+	    reason => "initializing a $class with an invalid argument ($items) instead of an array of items");  
+    } elsif( !$items && ( 
+			  !$seqio || !ref($seqio) || 
+			  ! $seqio->isa('Bio::SeqIO')) ) {	
+	throw org::biocorba::seqcore::UnableToProcess(
+	    reason => "initializing a $class with an invalid argument for seqio, must a real Bio::SeqIO reference not ".ref($seqio).".");  
     } 
     
     if( $items ) {
@@ -140,6 +142,9 @@ sub next {
     } else {
 	$self->{'_pointer'}++;
 	$item = $self->_elements->[$self->{'_pointer'}];
+    }
+    if( ! $item ) {
+	throw org::biocorba::seqcore::EndOfStream;
     }
     return $item->get_activated_object_reference();
 }
