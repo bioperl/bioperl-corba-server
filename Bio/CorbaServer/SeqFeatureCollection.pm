@@ -133,7 +133,6 @@ sub get_annotations {
 	
 	push(@obj,$sfobj->get_activated_object_reference);
     }
-
     
     my $it = new Bio::CorbaServer::Iterator('-poa'   => $self->poa,
 					    '-items' => \@obj);
@@ -145,7 +144,7 @@ sub get_annotations {
 						     '-seqfeature' => $s);
 	push (@ret, $sfobj->get_activated_object_reference);
     }
-    return (\@sf,$iterator);
+    return (\@ret,$iterator);
 }
 
 =head2 bsane::seqcore::SeqFeatureCollection methods
