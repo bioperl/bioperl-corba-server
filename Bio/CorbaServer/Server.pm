@@ -161,7 +161,8 @@ sub _load_module {
     print STDERR <<END;
 $load: $format cannot be found
 Exception $@
-For more information about the SeqIO system please see the SeqIO docs.
+For more information about the Bio::CorbaServer::Server system 
+please see the Bio::CorbaServer::Server docs.
 This includes ways of checking for formats at compile time, not run time
 END
   ;
