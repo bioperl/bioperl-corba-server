@@ -28,7 +28,7 @@ try {
 };
 
 try {
-    $seq = $db->resolve('HSEARLOBE');
+    $seq = $db->resolve('HUMBDNF');
     print "Seq is ", $seq->seq(), "\n";
     my ($seqs,$iter) = $db->get_seqs(1);
     print "iter is $iter seqs are $seqs\n";
@@ -37,9 +37,11 @@ try {
 	print "seq is $seq\n";
 	print "seq is ", $seq->get_name(), "\n";
 	my $sfc = $seq->get_seq_features();
-	my $loc = &create_BSANE_location_from_Bioperl_location(new Bio::Location::Simple('-start' => 1, '-end' => $seq->get_length-1, '-strand' => 1 ) );
+	my $loc = &create_BSANE_location_from_Bioperl_location(new Bio::Location::Simple('-start' => 1, '-end' => $seq->get_length, '-strand' => 1 ) );
 	#print "loc is ", Dumper($loc),"\n";
 	print "feature count is ", $sfc->num_features_on_region($loc),"\n";
+
+	my ($list,$iter) = $sfc->get_features_on_region(2,&create_BSANE_location_from_Bioperl_location(new Bio::Location::Simple('-start' => 1, '-end' => $seq->get_length-1, '-strand' => 1 ) ));
     }
     my ($seqs,$iter) = $db->get_seqs(1);
     print "iter is $iter seqs are $seqs\n";
@@ -50,6 +52,7 @@ try {
 	    print "seq is $s\n";
 	}
     }
+    
     
 
 } catch bsane::OutOfBounds with { 

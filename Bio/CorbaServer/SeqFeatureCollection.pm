@@ -172,11 +172,12 @@ sub get_features_on_region {
    my $seq = $self->_seq;
    my $seq_region_location = &create_Bioperl_location_from_BSANE_location($seq_region); 
    if( $seq->length < $seq_region_location->start ||
-       $seq_region_location->end ) {
+       $seq->length < $seq_region_location->end ) {
+       
        throw bsane::seqcore::SeqFeatureLocationOutOfBounds
 	   (
-	    $seq_region,
-	    &create_BSANE_location_from_Bioperl_location(new Bio::Location::Simple('-start' => 1, '-end' => $seq->length, '-strand' => 0 ) )
+	    'invalid' => $seq_region,
+	    'valid'   => &create_BSANE_location_from_Bioperl_location(new Bio::Location::Simple('-start' => 1, '-end' => $seq->length, '-strand' => 0 ) )
 	    );
    }
    my @features;
@@ -190,18 +191,15 @@ sub get_features_on_region {
    foreach my $f ( @features ) {
        my $sfobj = new Bio::CorbaServer::SeqFeature( '-poa' => $self->poa,
 						     '-seqfeature' => $f);
-       push @obj, $sfobj; 
+       push @obj, $sfobj->get_activated_object_reference; 
    }
    @features = ();
-   my @ret = splice(@obj,0,$how_many);
-   foreach my $r ( @ret ) {
-       push @features, $r->get_actived_object_reference;
-   }
+   my @ret = splice(@obj,0,$how_many);   
 
    my $it = new Bio::CorbaServer::Iterator('-poa'   => $self->poa,
 					   '-items' => \@obj);
    $the_rest = $it->get_activated_object_reference();   
-   return @ret;
+   return \@ret,$the_rest;
 }
 
 =head2 num_features_on_region
@@ -223,7 +221,7 @@ sub num_features_on_region {
    if( $seq->length < $seq_region_location->start ||
        $seq->length < $seq_region_location->end ) {
        
-      throw bsane::seqcore::SeqFeatureLocationOutOfBounds
+       throw bsane::seqcore::SeqFeatureLocationOutOfBounds
 	   (
 	    'invalid' => $seq_region,
 	    'valid'   => &create_BSANE_location_from_Bioperl_location(new Bio::Location::Simple('-start' => 1, '-end' => $seq->length, '-strand' => 0 ) )
