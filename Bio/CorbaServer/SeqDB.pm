@@ -12,7 +12,7 @@
 
 =head1 NAME
 
-Bio::CorbaServer::SeqDB - DESCRIPTION of Object
+Bio::CorbaServer::SeqDB - Sequence Database
 
 =head1 SYNOPSIS
 
@@ -83,7 +83,7 @@ or the web:
 
 =head1 AUTHOR - Ewan Birney, Jason Stajich
 
-Email birney@ebi.ac.uk, jason@chg.mc.duke.edu
+Email birney@ebi.ac.uk, jason@bioperl.org
 
 Describe contact details here
 
@@ -102,6 +102,7 @@ use strict;
 # Object preamble - inherits from Bio::CorbaServer::Base
 use Bio::CorbaServer::Base;
 use Bio::CorbaServer::Seq;
+use Bio::CorbaServer::SeqIterator;
 
 @ISA = qw(POA_bsane::collection::BioSequenceCollection 
 	Bio::CorbaServer::Base );
@@ -152,8 +153,7 @@ sub resolve{
  Title   : get_seqs
  Usage   : my @seqs = $db->get_seqs($howmany, $iterator)
  Function: Returns the list of sequences, 
- Example :
- Returns : 
+ Returns : SeqIterator
  Args    :
 
 
@@ -166,18 +166,20 @@ sub get_seqs{
        throw bsane::OutOfBounds('reason' => 'cannot call get_seqs on a non Indexed database');
    }
    
-   my $list = [];
+   my @list;
    my $seqio = $self->_seqdb->get_PrimarySeq_stream();
    my $count = 0;
    while( $count++ < $howmany && defined (my $s = $seqio->next_seq) ) {
        my $sobj = new Bio::CorbaServer::Seq('-poa' => $self->poa,
 					    '-seq' => $s);
-       push @$list, $sobj->get_activated_object_reference();
+       push @list, $sobj->get_activated_object_reference();
    }
+   
    $iterator = new Bio::CorbaServer::SeqIterator('-poa' => $self->poa,
-						 '-seqio' => $seqio);
-      
-   return $list;
+					       '-seqio' => $seqio);
+   
+   my $ref = $iterator->get_activated_object_reference();
+   return \@list, $ref;
 }
 
 

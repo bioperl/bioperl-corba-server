@@ -12,7 +12,7 @@
 
 =head1 NAME
 
-Bio::CorbaServer::SeqIterator - DESCRIPTION of Object
+Bio::CorbaServer::SeqIterator - An iterator for Sequences
 
 =head1 SYNOPSIS
 
@@ -99,66 +99,38 @@ sub new {
   return $self;
 }
 
-=head2 has_more
-
- Title   : has_more
- Usage   : $self->has_more()
- Function: has more elements to iterate towards
- Returns : boolean
- Args    : none
-
-=cut
-
-sub has_more {
-    my ($self) = @_;
-    # is it expensive to call eof?
-    return ( $self->_seqio && ! eof($self->_seqio->fh) );
-}
-
 =head2 next
 
  Title   : next
  Usage   : my $item = $self->next()
  Function: returns next item in iterator list
  Returns : Bio::CorbaServer::PrimarySeq
- Args    : none
+ Args    : $item OUT parameter and boolean if more data available
 
 =cut
 
 sub next {
-    my ($self) = @_;
-
+    my ($self,$item) = @_;
+    if( ! defined $self->_seqio ) {
+	throw bsane::IteratorInvalid('reason' => 'SeqIO has been resent in Perl Iterator implementation');
+    }
     my $next = $self->_seqio->next_seq;
     if( ! defined $next ) {
-	throw bsane::OutOfBounds('reason' => 'End of Sequence stream reached');
+	return (0,undef);
+#	throw bsane::OutOfBounds('reason' => 'End of Sequence stream reached');
     }
-    my $item;
-    if( $next->isa('Bio::SeqI' ) {
+    if( $next->isa('Bio::SeqI') ) {
 	$item = new Bio::CorbaServer::Seq('-poa' => $self->poa,
 					  '-seq' => $next);
-    } elsif( $next->isa('Bio::PrimarySeqI' ) {
+    } elsif( $next->isa('Bio::PrimarySeqI') ) {
 	$item = new Bio::CorbaServer::PrimarySeq('-poa' => $self->poa,
 						 '-seq' => $next);
+    } else { 
+	return 0, undef;
     }
-    return $item->get_activated_object_reference;
+    my $ref = $item->get_activated_object_reference;
+    return (1,$ref);
 }
-
-=head2 reset
-
- Title   : reset
- Usage   : $iterator->reset();
- Function: Reset the iterator (if possible)
- Returns : none
- Args    : none
-
-=cut
-
-sub reset{
-   my ($self) = @_;
-   # can't reset seqio streams
-   # should we throw an exception here?
-}
-
 
 =head2 _seqio
 
@@ -181,3 +153,4 @@ sub _seqio{
 
 }
 
+1;
