@@ -145,8 +145,23 @@ sub get_basis{
 
 sub get_value{
    my ($self) = @_;
+   unless ( defined $self->{'_value'} ) { 
+       return new CORBA::Any( new CORBA::TypeCode("IDL:CORBA/Null:1.0"),
+			      $self->{'_value'});
+   } 
+
+   my $rc = $self->{'_value'};
+   
+   if( ref($rc)  ) {
+       if( $rc->can('as_text') ) {
+	   $rc = $rc->as_text();
+       } else {
+	   $self->warn("Not sure how to handle object of type $rc in get_value");
+	   $rc = '';
+       }
+   }
    return new CORBA::Any( new CORBA::TypeCode("IDL:CORBA/String:1.0"),
-			  $self->{'_value'});
+			  $rc);
 }
 
 1;
