@@ -24,12 +24,15 @@ use CORBA::ORBit idl => [ 'biocorba.idl' ];
 $orb = CORBA::ORB_init("orbit-local-orb");
 $root_poa = $orb->resolve_initial_references("RootPOA");
 
-#build a new CorbaServer object. This is a very light weight wrapper.
-# $servant = Bio::CorbaServer::PrimarySeqDB->new($root_poa,
-#                               'test_db', $tst_index_file);
+# make a Fast index object
+
+my $seqdb = Bio::Index::Fasta->new(-filename => $tst_index_file, 
+				 -write_flag => 0, 
+				 -verbose => 1);
+
 					
 $servant = Bio::CorbaServer::SeqDB->new($root_poa,'test_db', 
-					$tst_index_file);
+					$seqdb);
 
 # this registers this object as a live object with the ORB
 my $id = $root_poa->activate_object ($servant);

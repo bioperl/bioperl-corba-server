@@ -325,6 +325,12 @@ It prevents a sequence with features having to stay in memory for ever.
 =cut
 
 sub get_PrimarySeq {
+    my $self = shift;
+    my $servant = Bio::CorbaServer::PrimarySeq->new($self->poa,$self->seq->primary_seq);
+
+   my $id = $self->poa->activate_object ($servant);
+   my $temp = $self->poa->id_to_reference ($id);
+   return $temp;
 
 }
 
