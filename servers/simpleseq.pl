@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 
-use CORBA::ORBit idl => [ '../idl/seqcore.idl' ];
+use CORBA::ORBit idl => [ 'idl/biocorba.idl' ];
 use Bio::CorbaServer::PrimarySeq;
 use Bio::SeqIO;
 use Bio::PrimarySeq;
