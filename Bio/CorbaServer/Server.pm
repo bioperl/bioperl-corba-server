@@ -88,7 +88,7 @@ sub _initialize {
 
     $self->{_ior} = $ior || 'biocorba.ior';
     $self->{_idl} = $idl || 'biocorba.idl';
-    $self->{_orbname} = $orbname;
+    $self->{_orbname} = $orbname || 'orbit-local-orb';
     
     my $orb = CORBA::ORB_init($orbname);
     my $root_poa = $orb->resolve_initial_references("RootPOA");
