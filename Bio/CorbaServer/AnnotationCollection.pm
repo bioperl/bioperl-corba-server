@@ -65,9 +65,10 @@ Internal methods are usually preceded with a _
 
 
 package Bio::CorbaServer::AnnotationCollection;
+
 use vars qw(@ISA);
 use strict;
-
+use Bio::CorbaServer::Annotation;
 use Bio::CorbaServer::Base;
 
 @ISA = qw( POA_bsane::AnnotationCollection Bio::CorbaServer::Base );
