@@ -126,8 +126,10 @@ sub new_object {
     my $obj;
     if ( &_load_module($objectname) == 0 ) { # normalize capitalization
 	return undef;
-    }       
-    $obj = $objectname->new( $self->{_rootpoa}, @$args );    
+    }    
+    # create the new object with a no_destroy flag so it can be accessed
+    # by multiple clients
+    $obj = $objectname->new( $self->{_rootpoa}, @$args, no_destroy => 1 );    
     if( @$ || !defined $obj ) { 
 	$self->throw("Cannot instantiate object of type $objectname");
     }

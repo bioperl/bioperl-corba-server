@@ -65,15 +65,13 @@ use strict;
 use Bio::CorbaServer::Base;
 
 
-@ISA = qw(Bio::CorbaServer::Base POA_org::Biocorba::Seqcore::SeqFeature);
+@ISA = qw(POA_org::Biocorba::Seqcore::SeqFeature Bio::CorbaServer::Base);
 
 
 sub new {
-    my $class = shift;
-    my $poa = shift;
-    my $seqf = shift;
+    my ($class, $poa, $seqf, @args) = @_;
 
-    my $self = Bio::CorbaServer::Base->new($poa);
+    my $self = Bio::CorbaServer::Base->new($poa, @args);
 
     if( ! defined $seqf || ! ref $seqf || ! $seqf->isa('Bio::SeqFeatureI') ) {
 	die "Must have poa and seq into Seq Feature";
@@ -115,14 +113,15 @@ sub type{
 =cut
 
 sub source {
-   my ($self,@args) = @_;
+  my ($self,@args) = @_;
 
-   return $self->seqf->source_tag;
+  return $self->seqf->source_tag;
 }
 
-=head2 start
 
- Title   : start
+=head2 seq_primary_id
+
+ Title   : seq_primary_id
  Usage   :
  Function:
  Example :
@@ -132,10 +131,16 @@ sub source {
 
 =cut
 
+sub seq_primary_id {
+  my ($self, @args) = @_;
+
+  return -1;
+}
+
 sub start{
-   my ($self,@args) = @_;
+  my ($self,@args) = @_;
    
-   $self->seqf->start;
+  $self->seqf->start;
 }
 
 =head2 end
@@ -187,10 +192,21 @@ sub strand{
 =cut
 
 sub qualifiers{
-   my ($self,@args) = @_;
+  my ($self,@args) = @_;
    
+  my @tags = $self->seqf->all_tags;
+
+  my @all_values;
+
+  foreach my $tag (@tags) {
+    my $name_value = { name => $tag,
+		       values =>[$self->seqf->each_tag_value($tag)]
+		     };
+    
+    push(@all_values, $name_value);
+  }
       
-   return ();
+   return [@all_values];
 }
 
 sub PrimarySeq_is_available{

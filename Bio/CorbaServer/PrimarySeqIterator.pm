@@ -79,11 +79,9 @@ use Bio::CorbaServer::PrimarySeq;
 
 
 sub new {
-    my $class = shift;
-    my $poa = shift;
-    my $seqio = shift;
+    my ($class, $poa, $seqio, @args) = @_;
 
-    my $self = Bio::CorbaServer::Base->new($poa);
+    my $self = Bio::CorbaServer::Base->new($poa, @args);
 
     if( ! ref $seqio ) {
 	die "Must have poa and seqio into PrimarySeqIterator";

@@ -70,12 +70,10 @@ use Bio::CorbaServer::Base;
 
 # Object preamble - inherits from Bio::Root::Object
 
-@ISA = qw(POA_org::Biocorba::Seqcore::PrimarySeq Bio::CorbaServer::Base );
+@ISA = qw(POA_org::Biocorba::Seqcore::PrimarySeq Bio::CorbaServer::Base);
 
 sub new {
-    my $class = shift;
-    my $poa = shift;
-    my $seq = shift;
+    my ($class, $poa, $seq, @args) = @_;
     
     if( ! defined $seq || !ref $seq || ! $seq->isa('Bio::PrimarySeqI') ) {
 	$seq = '' if( !defined $seq );
@@ -83,7 +81,7 @@ sub new {
 	    (reason=>$class ." got a non sequence [$seq] for server object");
     }
 
-    my $self = Bio::CorbaServer::Base->new($poa);
+    my $self = Bio::CorbaServer::Base->new($poa, @args);
     
     bless $self,$class;
     $self->_seq($seq);

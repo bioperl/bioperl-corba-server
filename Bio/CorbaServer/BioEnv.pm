@@ -64,9 +64,6 @@ package Bio::CorbaServer::BioEnv;
 use vars qw($AUTOLOAD @ISA);
 use strict;
 
-# Object preamble - inherits from Bio::Root::Object
-
-
 use Bio::SeqIO;
 use Bio::CorbaServer::PrimarySeq;
 use Bio::CorbaServer::Base;
@@ -76,9 +73,8 @@ use Bio::CorbaServer::PrimarySeqIterator;
 
 
 sub new {
-    my $class = shift;
-    my $poa = shift;
-    my $self = Bio::CorbaServer::Base->new($poa);
+    my ($class, $poa, @args) = @_;
+    my $self = Bio::CorbaServer::Base->new($poa, @args);
     bless $self,$class;
     return $self;
 }

@@ -69,11 +69,11 @@ use Bio::CorbaServer::Base;
 use Bio::CorbaServer::PrimarySeqIterator;
 
 
-@ISA = qw( Bio::CorbaServer::Base POA_org::Biocorba::Seqcore::PrimarySeqDB);
+@ISA = qw(POA_org::Biocorba::Seqcore::PrimarySeqDB Bio::CorbaServer::Base);
 
 sub new { 
-    my ($class,$poa,$name,$seqdb) = @_;
-    my $self = Bio::CorbaServer::Base->new($poa);
+    my ($class,$poa,$name,$seqdb, @args) = @_;
+    my $self = Bio::CorbaServer::Base->new($poa, @args);
 
     bless ($self,$class);
     $self->{_dbname} = $name;

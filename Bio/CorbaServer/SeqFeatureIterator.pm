@@ -69,11 +69,9 @@ use Bio::CorbaServer::Base;
 
 
 sub new {
-    my $class = shift;
-    my $poa = shift;
-    my $array = shift;
+    my ($class, $poa, $array, @args) = @_;
 
-    my $self = Bio::CorbaServer::Base->new($poa);
+    my $self = Bio::CorbaServer::Base->new($poa, @args);
 
     if( ! defined $array ) {
 	die "Must have poa and seq into Seq";
@@ -92,4 +90,15 @@ sub next {
     } else {
 	throw org::Biocorba::Seqcore::EndOfStream;
     }
+}
+
+sub has_more {
+  my $self = shift;
+
+  if ($#{$self->{'array'}} >=0 ) {
+    return 1;
+  } else {
+    return 0;
+  }
+
 }

@@ -65,14 +65,18 @@ use vars qw($AUTOLOAD @ISA);
 use strict;
 
 # Object preamble - inherits from Bio::Root::Object
-
+use Bio::Root::Object;
+@ISA = qw(Bio::Root::Object);
 
 sub new {
-    my $class = shift;
-    my $poa = shift;
+    my ($class, $poa, @args) = @_;
 
     my $self = {};
     bless $self,$class;
+
+    my ($no_destroy) = $self->_rearrange(['NO_DESTROY'], @args);
+
+    $self->{'no_destroy'} = $no_destroy if $no_destroy;
 
     $self->poa($poa);
     $self->reference_count(1);
@@ -89,7 +93,9 @@ sub ref {
 sub unref {
     my $self = shift;
     if( $self->reference_count == 1 ) {
+      if (!($self->{'no_destroy'})) {
 	$self->poa->deactivate_object ($self->poa->servant_to_id ($self));
+      }
     }
     $self->{'reference_count'}--;
 }

@@ -70,20 +70,16 @@ package Bio::CorbaServer::Seq;
 use vars qw(@ISA);
 use strict;
 
-
-use Bio::CorbaServer::Base;
 use Bio::CorbaServer::PrimarySeq;
 use Bio::CorbaServer::SeqFeature;
 use Bio::CorbaServer::SeqFeatureIterator;
 
-@ISA = qw(Bio::CorbaServer::Base Bio::CorbaServer::PrimarySeq);
+@ISA = qw(POA_org::Biocorba::Seqcore::Seq Bio::CorbaServer::PrimarySeq);
 
 sub new {
-    my $class = shift;
-    my $poa = shift;
-    my $seq = shift;
+    my ($class, $poa, $seq, @args) = @_;
 
-    my $self = Bio::CorbaServer::Base->new($poa);
+    my $self = Bio::CorbaServer::PrimarySeq->new($poa, $seq, @args);
 
     if( ! defined $seq || !ref $seq || ! $seq->isa('Bio::SeqI') ) {
 	throw  org::Biocorba::Seqcore::UnableToProcess (reason=>"Got a non sequence [$seq]");	
@@ -92,84 +88,6 @@ sub new {
     $self->seq($seq);
     return $self;
 }
-
-=head1 PrimarySeq functions
-
-These functions are here because Seq inheriets from PrimarySeq
-object
-
-=head2 length
-
- Title   : length
- Usage   :
- Function:
- Example :
- Returns : length of sequence
- Args    :
-
-=head2 get_seq
-
- Title   : get_seq
- Usage   :
- Function:
- Example :
- Returns : sequence string
- Args    :
-
-=head2 get_subseq 
-
- Title   : sub_sequence 
- Usage   :
- Function:
- Example :
- Returns : a substring of the sequence string
- Args    :
-
-=head2 display_id 
-
- Title   : display_id 
- Usage   :
- Function:
- Example :
- Returns : display_id of sequence
- Args    :
-
-=head2 accession_number
-
- Title   : accession_number
- Usage   :
- Function:
- Example :
- Returns : accession_number of sequence
- Args    :
-
-=cut
-
-sub accession_number {
-    my $self = shift;
-    return $self->seq->accession_number();
-}
-
-=head2 primary_id
-
- Title   : primary_id
- Usage   :
- Function:
- Example :
- Returns : primary id of sequence
- Args    :
-
-
-=head2 max_request_length
-
- Title   : max_request_length
- Usage   :
- Function:
- Example :
- Returns : maximum allowable sequence length
- Args    :
-
-=cut
 
 =head1 Seq functions
 
@@ -191,8 +109,8 @@ sub all_features {
     my @sf;
     my @ret;
 
-    @sf = $self->seq->top_SeqFeatures();
-    
+    @sf = $self->seq->all_SeqFeatures();
+
     foreach my $sf ( @sf ) {
 	my $serv = Bio::CorbaServer::SeqFeature->new($self->poa,$sf);
 	my $id = $self->poa->activate_object ($serv);
@@ -200,14 +118,19 @@ sub all_features {
 	push(@ret,$temp);
     }
 
-    return @ret;
+    return [@ret];
 }
 
 sub all_features_iterator {
     my $self = shift;
-    my @corbarefs = $self->all_features;
+    my $corbarefs = $self->all_features;
 
-    return [ Bio::CorbaServer::SeqFeatureIterator->new($self->poa,\@corbarefs) ];
+    my $serv = Bio::CorbaServer::SeqFeatureIterator->new($self->poa, 
+							 $corbarefs);
+    my $id = $self->poa->activate_object($serv);
+    my $temp = $self->poa->id_to_reference($id);
+
+    return $temp;
 }
 
 =head2 features_region

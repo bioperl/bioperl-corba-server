@@ -1,4 +1,3 @@
-
 #
 # BioPerl module for Bio::CorbaServer::SeqDB
 #
@@ -64,17 +63,17 @@ package Bio::CorbaServer::SeqDB;
 use vars qw($AUTOLOAD @ISA);
 use strict;
 
-# Object preamble - inherits from Bio::Root::Object
-use Bio::CorbaServer::Base;
+# Object preamble - inherits from Bio::CorbaServer::PrimarySeqDB
+use Bio::CorbaServer::PrimarySeqDB;
 use Bio::CorbaServer::PrimarySeqIterator;
 use Bio::CorbaServer::Seq;
 
 
-@ISA = qw( Bio::CorbaServer::Base POA_org::Biocorba::Seqcore::SeqDB);
+@ISA = qw(POA_org::Biocorba::Seqcore::SeqDB Bio::CorbaServer::PrimarySeqDB);
 
 sub new {
-    my ($class,$poa,$name,$seqdb) = @_;
-    my $self = Bio::CorbaServer::Base->new($poa);
+    my ($class,$poa,$name,$seqdb, @args) = @_;
+    my $self = Bio::CorbaServer::PrimarySeqDB->new($poa, $name, $seqdb, @args);
     
     bless $self,$class;
     $self->{_dbname} = $name;
@@ -134,116 +133,6 @@ sub get_primaryidList {
     my $self = shift;    
     my @ids = $self->seqdb->get_all_primary_ids();
     return [ @ids ];
-}
-
-
-=head1 PrimarySeqDB Interface Routines
-
-=head2 database_name
-
- Title   : database_name
- Usage   : 
- Function:
- Example :
- Returns : database name
- Args    : 
-
-=cut
-
-sub database_name {
-    my $self = shift;
-    return $self->{_dbname};
-}
-
-=head2 database_version
-
- Title   : database_version
- Usage   : 
- Function:
- Example :
- Returns : database version
- Args    : 
-
-=cut
-
-sub database_version {
-    my $self = shift;
-    return $self->seqdb->_version;
-}
-
-=head2 make_PrimarySeqIterator
-
- Title   : make_PrimarySeqIterator
- Usage   : 
- Function:
- Example :
- Returns : an iterator over all the primary seqs
-           available on this object
- Args    : 
-
-=cut
-
-sub make_PrimarySeqIterator {
-    my $self = shift;
-    my $seqio = $self->seqdb->get_PrimarySeq_stream;
-    my $servant = Bio::CorbaServer::PrimarySeqIterator->new($self->poa,
-							    $seqio);
-    # data marshall object out    
-    my $id = $self->poa->activate_object($servant);
-    my $temp = $self->poa->id_to_reference($id);
-    return $temp;
-
-}
-
-=head2 get_PrimarySeq
-
- Title   : get_PrimarySeq
- Usage   : 
- Function:
- Example :
- Returns : a primary sequence for a specific id
- Args    : accessor id for the sequence to return
-
-=cut
-
-sub get_PrimarySeq {
-    # throws (UnableToProcess)
-    my $self = shift;
-    my $id = shift;
-
-    my $seq = $self->seqdb->get_PrimarySeq_by_primary_id($id);
-
-    if( defined $seq ) {
-	my $servant = Bio::CorbaServer::Seq->new($self->poa, $seq);
-	# data marshall object out
-	my $id = $self->poa->activate_object($servant);
-	my $temp = $self->poa->id_to_reference($id);
-	return $temp;
-    } else {
-	throw org::Biocorba::Seqcore::UnableToProcess
-	    ( reason => ref($self)." could not find seq for $id");
-    }
-}
-
-=head1 Local Package methods
-
-Non IDL defined methods
-
-=head2 seqdb
-
- Title   : seqdb
- Usage   : 
- Function:
- Example :
- Returns : reference to seqdb object
- Args    : 
-
-=cut
-
-sub seqdb {
-    my ($self,$value) = @_;
-    $self->{_seqdb} = $value if ( defined $value);
-    return $self->{_seqdb};
 }
 
 
