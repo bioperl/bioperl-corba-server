@@ -179,7 +179,7 @@ sub get_Seq_from_file {
     my $seq;
 
     eval {
-	my $seqio = $self->_get_seqio;
+	my $seqio;
 	if( $format !~ /\w/ ) {
 	    $seqio = Bio::SeqIO->new(-file => $file);
 	} else {

@@ -157,7 +157,7 @@ sub get_PrimarySeqVector {
     my @obj;
     while( my $seq = $seqio->next_primary_seq ) { 
 	push @obj,
-	new Bio::CorbaServer::Seq('-poa'=>$self->poa, '-seq' => $seq); 
+	new Bio::CorbaServer::PrimarySeq('-poa'=>$self->poa, '-seq' => $seq); 
     }
     my $vector = new Bio::CorbaServer::PrimarySeqVector('-poa'=> $self->poa,
 							'-items' => \@obj);
@@ -178,7 +178,7 @@ sub get_PrimarySeqVector {
 sub get_PrimarySeq {
     # throws (UnableToProcess)
     my ($self,$id) = @_;
-    my $seq = $self->_seqdb->get_PrimarySeq_by_primary_id($id);
+    my $seq = $self->_seqdb->get_Seq_by_primary_id($id);
     if( defined $seq ) {
 	my $primary_seq = $seq->primary_seq();
 	my $servant = new Bio::CorbaServer::PrimarySeq('-poa' => $self->poa, 
