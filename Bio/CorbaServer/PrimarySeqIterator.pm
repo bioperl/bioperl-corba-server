@@ -83,14 +83,13 @@ sub new {
     my $poa = shift;
     my $seqio = shift;
 
-    my $self = {};
+    my $self = Bio::CorbaServer::Base->new($poa);
 
-    if( ! defined $seqio ) {
+    if( ! ref $seqio ) {
 	die "Must have poa and seqio into PrimarySeqIterator";
     }
     bless $self,$class;
 
-    $self->poa($poa);
     $self->seqio($seqio);
     $self->at_end(0);
     $self->_reload();

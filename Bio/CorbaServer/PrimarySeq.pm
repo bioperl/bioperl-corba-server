@@ -64,6 +64,7 @@ The rest of the documentation details each of the object methods. Internal metho
 package Bio::CorbaServer::PrimarySeq;
 
 use vars qw($AUTOLOAD @ISA);
+use Bio::CorbaServer::Base;
 use strict;
 
 # Object preamble - inherits from Bio::Root::Object
@@ -71,20 +72,20 @@ use strict;
 
 
 
-@ISA = qw(POA_org::Biocorba::Seqcore::PrimarySeq);
+@ISA = qw(Bio::CorbaServer::Base POA_org::Biocorba::Seqcore::PrimarySeq);
 
 sub new {
     my $class = shift;
+    my $poa = shift;
     my $seq = shift;
 
     if( ! defined $seq || !ref $seq || !$seq->isa('Bio::PrimarySeqI') ) {
 	die "In CorbaServer PrimarySeq, got a non sequence [$seq] for server object";
     }
 
-    
-    my $self = {};
+    my $self = Bio::CorbaServer::Base->new($poa);
+
     $self->{'seqobj'} = $seq;
-    $self->{'ref_count'} = 1;
     bless $self,$class;
     return $self;
 }

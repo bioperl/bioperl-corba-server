@@ -62,10 +62,10 @@ The rest of the documentation details each of the object methods. Internal metho
 package Bio::CorbaServer::SeqFeature;
 use vars qw(@ISA);
 use strict;
+use Bio::CorbaServer::Base;
 
 
-
-@ISA = qw(POA_org::Biocorba::Seqcore::SeqFeature);
+@ISA = qw(Bio::CorbaServer::Base POA_org::Biocorba::Seqcore::SeqFeature);
 
 
 sub new {
@@ -73,14 +73,13 @@ sub new {
     my $poa = shift;
     my $seqf = shift;
 
-    my $self = {};
+    my $self = Bio::CorbaServer::Base->new($poa);
 
-    if( ! defined $seq ) {
+    if( ! defined $seqf ) {
 	die "Must have poa and seq into Seq";
     }
     bless $self,$class;
 
-    $self->poa($poa);
     $self->seqf($seqf);
     return $self;
 }

@@ -71,11 +71,10 @@ use vars qw(@ISA);
 use strict;
 
 
-use Bio::SeqIO;
 use Bio::CorbaServer::PrimarySeq;
+use Bio::CorbaServer::Base;
 
-
-@ISA = qw(POA_org::Biocorba::Seqcore::Seq);
+@ISA = qw(Bio::CorbaServer::Base POA_org::Biocorba::Seqcore::Seq);
 
 
 sub new {
@@ -83,15 +82,14 @@ sub new {
     my $poa = shift;
     my $seq = shift;
 
-    my $self = {};
+    my $self = Bio::CorbaServer::Base->new($poa);
 
     if( ! defined $seq ) {
 	die "Must have poa and seq into Seq";
     }
     bless $self,$class;
 
-    $self->poa($poa);
-    $self->seq($seqio);
+    $self->seq($seq);
     return $self;
 }
 
@@ -177,7 +175,10 @@ sub all_features {
 }
 
 sub all_features_iterator {
+    my $self = shift;
+    my @corbarefs = $self->all_features;
 
+    return Bio::CorbaServer::SeqFeatureIterator->new($self->poa,\@corbarefs);
 }
 
 sub features_region {
@@ -217,27 +218,6 @@ sub seq{
       $obj->{'seq'} = $value;
     }
     return $obj->{'seq'};
-
-}
-
-=head2 poa
-
- Title   : poa
- Usage   : $obj->poa($newval)
- Function: 
- Example : 
- Returns : value of poa
- Args    : newvalue (optional)
-
-
-=cut
-
-sub poa{
-   my ($obj,$value) = @_;
-   if( defined $value) {
-      $obj->{'poa'} = $value;
-    }
-    return $obj->{'poa'};
 
 }
 
