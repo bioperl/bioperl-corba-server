@@ -1,5 +1,14 @@
 Revision History for BioCorba::Server modules
 
+0.02   Mon Mar  5 18:25:05 EST 2001
+       - Support for updated new biocorba (0.2) IDL as written
+         by Alan Robinson
+       - Cleaner object code using the new Bioperl Location models
+         for Fuzzy, Split, and Simple locations
+       - Abandoned stream based sequence parsing and have gone to
+         Vector/Iterator methods as suggested by Alan.
+       - Cleaning up of exceptions name space
+
 0.01   Tue May 22 17:34:47 EDT 2000  
 	- Initial release 
 	- Supports full IDL features.  servers and testclients
