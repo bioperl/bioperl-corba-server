@@ -19,7 +19,6 @@ testclients/bioenv.pl
 testclients/bioiterator.pl
 testclients/get_seqdb.pl
 testclients/getseq.pl
-testclients/java_getseq.pl
 servers/bioenv_server.pl
 servers/bioiterator.pl
 servers/seqdbsrv.pl
