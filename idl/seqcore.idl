@@ -1,4 +1,4 @@
-//$Id: seqcore.idl,v 1.1 2001-09-11 11:13:38 birney Exp $
+//$Id: seqcore.idl,v 1.2 2001-09-27 13:03:51 jason Exp $
 #ifndef _DS_LSR_SEQCORE_IDL_
 #define _DS_LSR_SEQCORE_IDL_
 
@@ -151,9 +151,9 @@ module bsane {
      *
      **/
 
-    struct SeqFeatureLocation  {
+    struct SeqLocation {
       /** Specifies the (fuzzy) start position of a SeqFeatureLocation
-       * along a biological sequence.
+      * along a biological sequence.
        **/
       SeqFeaturePosition start;
       
@@ -166,13 +166,15 @@ module bsane {
        * lies on. 
        **/
       StrandTypeDef strand;          
-      
+    };
+
+    struct SeqFeatureLocation  {
+      SeqLocation seq_location;
+
       /** Region operator. NOTE: should be called location_operator?  **/
       SeqFeatureLocOpDef region_operator;
 
-      // XXX temporarily commented out while having problems with
-      // orbit-python and recursive structs
-      //sequence <SeqFeatureLocation> sub_regions;
+      sequence <SeqLocation> sub_seq_locations;
       
       Identifier id;
 
