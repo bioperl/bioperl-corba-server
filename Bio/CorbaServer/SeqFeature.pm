@@ -249,7 +249,6 @@ sub sub_SeqFeatures {
 sub locations {
     my ($self) = @_;
     my $location = $self->_seqf->location();
-    my @locations;
 
     if( !defined $location ) {
 	throw org::biocorba::seqcore::UnableToProcess(reason=>'Location object does not exist for contained seqfeature');
