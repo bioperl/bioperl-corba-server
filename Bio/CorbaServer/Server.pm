@@ -75,12 +75,6 @@ use CORBA::ORBit idl => [ 'biocorba.idl' ];
 
 use Bio::Root::Object;
 use Bio::CorbaServer::Base;
-use Bio::CorbaServer::PrimarySeq;
-use Bio::CorbaServer::Seq;
-use Bio::CorbaServer::SeqFeature;
-use Bio::CorbaServer::SeqFeatureIterator;
-use Bio::CorbaServer::PrimarySeqDB;
-use Bio::CorbaServer::SeqDB;
 
 
 @ISA = qw ( Bio::Root::Object );
@@ -128,7 +122,50 @@ sub new_object {
     
     $self->throw("must have an object name before server can allocate a new object\n")
 	if( !defined $objectname );
-    my $obj = $objectname->new( $self->{_rootpoa}, @$args );
+    
+    my $obj;
+    if ( &_load_module($objectname) == 0 ) { # normalize capitalization
+	return undef;
+    }       
+    $obj = $objectname->new( $self->{_rootpoa}, @$args );    
+    if( @$ || !defined $obj ) { 
+	$self->throw("Cannot instantiate object of type $objectname");
+    }
     push @{$self->{_serverobjs}}, $obj;
     return $obj;
+}
+
+=head2 _load_module
+
+ Title   : _load_module
+ Usage   : *INTERNAL BioCorba Server stuff*
+ Function: Loads up (like use) a module at run time on demand
+ Example :
+ Returns :
+ Args    :
+
+=cut
+
+sub _load_module {
+  my ($format) = @_;
+  my ($module, $load, $m);
+  $format =~ s/::/\//g;
+  $load = "$format.pm";
+  $module = "_<$format.pm";
+  
+  return 1 if $main::{$module};
+  eval {
+    require $load;
+  };
+  if ( $@ ) {
+    print STDERR <<END;
+$load: $format cannot be found
+Exception $@
+For more information about the SeqIO system please see the SeqIO docs.
+This includes ways of checking for formats at compile time, not run time
+END
+  ;
+    return;
+  }
+  return 1;
 }

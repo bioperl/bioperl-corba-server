@@ -70,6 +70,7 @@ use strict;
 use Bio::SeqIO;
 use Bio::CorbaServer::PrimarySeq;
 use Bio::CorbaServer::Base;
+use Bio::CorbaServer::PrimarySeqIterator;
 
 @ISA = qw( Bio::CorbaServer::Base POA_org::Biocorba::Seqcore::BioEnv);
 
@@ -120,5 +121,38 @@ sub PrimarySeq_from_file {
 
     die ("should never have got here!");
 }
+
+sub PrimarySeqIterator_from_file {
+    my $self = shift;
+    my $format = shift;
+    my $file = shift;
+    
+	my $seqio;
+    eval {
+        # if no format was passed, we just need to guess
+        if ($format !~ /\w/) {
+            $seqio = Bio::SeqIO->new(-file => $file);
+        } else {
+            $seqio = Bio::SeqIO->new(-format => $format, -file => $file);
+        }
+    };
+    
+    if ($@) {
+        throw org::Biocorba::Seqcore::UnableToProcess 
+		  reason => 'Could not load the file or file format.';
+    } else {
+        my $servant = Bio::CorbaServer::PrimarySeqIterator->new($self->poa, 
+          $seqio);
+        my $id = $self->poa->activate_object($servant);
+        my $object = $self->poa->id_to_reference($id);
+        
+        return $object;
+    }
+    
+    die("Bad place to be.");
+}
+
+		
+		
 
 

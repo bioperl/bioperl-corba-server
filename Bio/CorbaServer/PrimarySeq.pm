@@ -174,7 +174,7 @@ sub get_subseq {
 
     my $ret;
     eval {
-	$self->_seq->subseq($start,$end);
+	$ret = $self->_seq->subseq($start,$end);
     };
     if( $@ ) {
 	#set exception
