@@ -27,6 +27,7 @@ $root_poa = $orb->resolve_initial_references("RootPOA");
 # this registers this object as a live object with the ORB
 my $id = $root_poa->activate_object ($servant);
 
+
 # we need to get the IOR of this object. The way to do this is to
 # to get a client of the object (temp) and then get the IOR of the
 # client

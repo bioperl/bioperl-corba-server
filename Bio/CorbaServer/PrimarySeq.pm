@@ -71,7 +71,7 @@ use strict;
 use Bio::Root::Object;
 
 
-@ISA = qw(POA_BioCorba::PrimarySeq);
+@ISA = qw(POA_org::Biocorba::Seqcore::PrimarySeq);
 
 sub new {
     my $class = shift;
@@ -97,7 +97,6 @@ sub length {
 sub get_seq {
     my $self = shift;
     my $seqstr = $self->{'seqobj'}->seq;
-    print STDERR "Got $seqstr\n";
     return $seqstr;
 }
 
@@ -136,3 +135,4 @@ sub max_request_length {
 
 
 	    
+

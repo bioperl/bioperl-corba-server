@@ -41,30 +41,37 @@ module GNOME {
 // well across large internet connections, so don't use it for that.
 //
 
-module BioCorba  {
+// The org.Biocorba.Seqcore package is so we look good in Java.
+// Makes the C interface names waaaaay too long of course
+
+module org {
+  module Biocorba  {
+    module Seqcore 
+      // changed indentation to give us more space for the main text
+{
 
   exception RequestTooLarge { string reason; 
-                              long suggested_size; }; 
-                            // means you need to request a smaller number,
-                            // ie, request only failed due to its size.
-
+  long suggested_size; }; 
+  // means you need to request a smaller number,
+  // ie, request only failed due to its size.
+  
   exception OutOfRange { string reason; };      // For when start/end points are out of range.
   exception EndOfStream { };                    // for end of streams
   exception UnableToProcess { string reason; }; // All other errors
-
+  
   enum SeqType { PROTEIN,DNA,RNA };
-
+  
   // AnonymousSeq is just the sequence informaiton and *nothing else*
   // including names
-
+  
   interface AnonymousSeq : GNOME::Unknown {
     SeqType type(); // server has to at least *guess* the type.
     long    length();
-
+    
     // the entire sequence. Use max_request_length to find the max
     // size allowed
     string  get_seq() raises (RequestTooLarge);
-
+    
     // gets a sub sequence. the start,end are in biological
     // coordinates, ie, 1-2 are the first two bases
     string  get_subseq(in long start,in long end) raises (OutOfRange,
@@ -72,12 +79,12 @@ module BioCorba  {
     // This is to find the largest string that can be passed back
     long    max_request_length(); 
   };
-
+  
   // Primary sequences are just the sequence information and enough to
   // idenity information to process the sequence/store results/etc.
- 
+  
   interface PrimarySeq : AnonymousSeq {
-
+    
     // three different id's which might be the same. The first,
     // display id is what to use if a human uses it. The second,
     // primary_id is what the implementation decides as the correct
@@ -86,7 +93,7 @@ module BioCorba  {
     // is the unique id in the biological database which it is from
     // (this maybe the same as the primary_id, but might not). Yes -
     // we do need all three ids.
-
+    
     string  display_id();       // id to display to humans 
     string primary_id();        // id to use as a unique id for this
                                 // sequence. in some cases it could be
@@ -94,19 +101,19 @@ module BioCorba  {
     string  accession_number();  // The unique id (commonly called accession number) in
                                 // the biological database this comes from, not the particular
                                 // instance of the database for the implementation.
-
+    
     long    version();    // potential (unstable) version number for the sequence. 0 for
-                          // things that don't have a version number
-
+    // things that don't have a version number
+    
   };
-
+  
   // Represents streaming through a single database, eg over a fasta file
   // Don't forget to deference objects once they are done
   interface PrimarySeqIterator : GNOME::Unknown {
     PrimarySeq next() raises (EndOfStream,UnableToProcess);
     boolean    has_more(); // returns 1 when next_seq will give an object
   };
-
+  
   // Provides a database mainly for database searching. Can make new
   // streams and can retrieve sequences from the database.
   interface PrimarySeqDB : GNOME::Unknown {
@@ -115,25 +122,25 @@ module BioCorba  {
     PrimarySeqIterator make_PrimarySeqIterator(); // makes a new iterator object.
     PrimarySeq get_PrimarySeq(in string primary_id) raises (UnableToProcess); // Retrieves one sequence
   };
-
+  
 
   // We need to be able to pass back additional structured information
   // in some cases. This gives us a way of doing it without specifying 
   // the structure at compile time. Try not to abuse this...
-
-
+  
+  
   // This is equivalent to a hash of arrays in perl
   typedef sequence <string> stringList;
   struct NameValueSet {
     string name;
     stringList values;
   };
-
+  
   typedef sequence <NameValueSet> NameValueSetList;
-
+  
   // SeqFeatures are features on a sequence. This is GFF
   // compatible. 
-
+  
   interface SeqFeature : GNOME::Unknown {
     string type();           // exon, repeat etc.
     string source();         // source of the SeqFeature mainly for GFF compatibility
@@ -151,7 +158,7 @@ module BioCorba  {
 
   // We have to handle large numbers of features.
   interface SeqFeatureIterator : GNOME::Unknown {
-    SeqFeature next();
+    SeqFeature next() raises (EndOfStream,UnableToProcess);
     boolean    has_more();
   };
 
@@ -186,17 +193,17 @@ module BioCorba  {
     PrimarySeq         get_PrimarySeq(); 
   };  
 
-  interface SeqIterator : GNOME::Unknown {
-    Seq        next();
-    boolean    has_more();
-  };
+  typedef sequence <string> primaryidList;
+
 
   interface SeqDB : PrimarySeqDB {
     Seq get_Seq(in string primary_id) raises (UnableToProcess); // Retrieves one sequence
-    SeqIterator make_SeqIterator(); 
+    primaryidList get_primaryidList();
   };
-};
 
+}; // end Seqcore module
+  }; // end Biocorba module
+}; // end org module
 
 
 
