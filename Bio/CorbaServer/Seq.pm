@@ -83,7 +83,7 @@ sub new {
     my $self = Bio::CorbaServer::Base->new($poa);
 
     if( ! defined $seq || !ref $seq || ! $seq->isa('Bio::SeqI') ) {
-	throw Corba::ServerException ("In CorbaServer Seq, got a non sequence [$seq]");	
+	throw  org::Biocorba::Seqcore::UnableToProcess (reason=>"Got a non sequence [$seq]");	
     }
     bless $self,$class;
     $self->seq($seq);
