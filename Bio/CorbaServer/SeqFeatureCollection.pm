@@ -70,6 +70,7 @@ use strict;
 use Bio::CorbaServer::Base;
 use Bio::CorbaServer::Iterator;
 use Bio::CorbaServer::Utils;
+use Bio::CorbaServer::SeqFeature;
 
 @ISA = qw( Bio::CorbaServer::Base POA_bsane::seqcore::SeqFeatureCollection  );
 # new() can be inherited from Bio::Root::RootI
@@ -126,7 +127,6 @@ sub get_annotations {
     my @ret = splice(@sf,0,$how_many);
 
     my @obj;
-
     foreach my $ret ( @ret ) {
 	my $sfobj = new Bio::CorbaServer::SeqFeature( '-poa' => $self->poa,
 						      '-seqfeature' => $ret);
@@ -134,10 +134,18 @@ sub get_annotations {
 	push(@obj,$sfobj->get_activated_object_reference);
     }
 
+    
     my $it = new Bio::CorbaServer::Iterator('-poa'   => $self->poa,
-					    '-items' => \@sf);
+					    '-items' => \@obj);
+
     $iterator = $it->get_activated_object_reference();
-    return @obj;
+    @ret = ();
+    foreach my $s ( @sf ) {
+	my $sfobj = new Bio::CorbaServer::SeqFeature('-poa' => $self->poa,
+						     '-seqfeature' => $s);
+	push (@ret, $sfobj->get_activated_object_reference);
+    }
+    return (\@sf,$iterator);
 }
 
 =head2 bsane::seqcore::SeqFeatureCollection methods

@@ -159,8 +159,3 @@ sub get_alphabet{
 }
 
 1;
-
-
-
-
-

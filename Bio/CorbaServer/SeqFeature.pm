@@ -99,6 +99,23 @@ sub get_name{
    return $self->_seqf->primary_tag;
 }
 
+=head2 get_value
+
+ Title   : get_value
+ Usage   : my $value = $annotation->get_value()
+ Function: Returns the value for a general annotation
+ Returns : string
+ Args    : none
+
+
+=cut
+
+sub get_value{
+   my ($self) = @_;
+   throw CORBA::NO_IMPLEMENT (-minor => 0x0,
+			      -status => 0x0);
+}
+
 =head2 get_basis
 
  Title   : get_basis
@@ -145,26 +162,7 @@ sub get_basis{
 
 sub get_annotations{
    my ($self) = @_;
-
-# jason to fix at some point
-#   my ($self,$how_many, $iterator) = @_;
-   
-#    my @subfeatures;
-#    if( $recurse ) {
-#	@subfeatures = &_recurse_seqf($self->_seqf);
-#    } else { 
-#	@subfeatures = $self->_seqf->sub_SeqFeature();
-#    }
-
-#    my @final;
-#    foreach my $subf ( @subfeatures ) {
-#	my $sf = new Bio::CorbaServer::SeqFeature('-poa' => $self->poa,
-#						  '-seqfeature' => $subf);
-#	push @final, $sf;
-#    }
-#    my $s = new Bio::CorbaServer::Iterator('-poa' => $self->poa,
-#					   '-elements' => \@final);
-#    return $s->get_activated_object_reference();
+   return ();
 }
 
 

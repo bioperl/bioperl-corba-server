@@ -135,12 +135,13 @@ sub new {
 
 sub resolve{
    my ($self,$id) = @_;
-   print "id is $id\n";
    my $seq = $self->_seqdb->get_Seq_by_acc($id);
    if( ! $seq ) { 
        $seq = $self->_seqdb->get_Seq_by_id($id)
    }
-   
+   if( ! $seq ) {
+       throw bsane::IdentifierDoesNotExist('id' => $id); 
+   }
    my $seqobj = new Bio::CorbaServer::Seq('-seq' => $seq,
 					  '-poa' => $self->poa);
    return $seqobj->get_activated_object_reference();

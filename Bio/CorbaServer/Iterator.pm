@@ -117,27 +117,12 @@ sub next {
 
     # check to be sure we still have items to return
     if (! $self->has_more()) {
-	throw bsane::seqcore::EndOfStream;
+	return (0,undef);
     }
     
     my $item = $self->_elements->[$self->{'_pointer'}];
     $self->{'_pointer'}++;
-    return $item->get_activated_object_reference;
-}
-
-=head2 reset
-
- Title   : reset
- Usage   : $iterator->reset();
- Function: Reset the iterator (if possible)
- Returns : none
- Args    : none
-
-=cut
-
-sub reset{
-   my ($self) = @_;
-   $self->{'_pointer'} = 0;
+    return (defined $item, $item);#->get_activated_object_reference();
 }
 
 =head2 _elements
