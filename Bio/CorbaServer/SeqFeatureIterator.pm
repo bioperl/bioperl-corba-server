@@ -93,16 +93,3 @@ sub next {
 	throw org::Biocorba::Seqcore::EndOfStream;
     }
 }
-
-sub next {
-    my $self = shift;
-
-    if( $#{$self->{'array'}} >= 0 ) {
-	return 1;
-    } else {
-	return 0;
-    }
-}
-
-
-    
