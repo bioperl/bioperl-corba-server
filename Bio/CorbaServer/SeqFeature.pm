@@ -225,6 +225,7 @@ sub get_locations {
 
     # recursively build the locations in case they are SplitLocations
     my @locations = &_buildlocations($location);
+    
     my $ref = [];
     push(@$ref,@locations);
 	
@@ -261,7 +262,7 @@ sub get_owner_sequence{
 sub _buildlocations {
     my ($location) = @_;
 
-    #print STDERR "Building a location with $location\n";
+    print STDERR "Building a location with $location\n";
 
     my @locations;
     if( $location->isa('Bio::Location::SplitLocationI') ) {
@@ -303,10 +304,10 @@ sub _buildlocations {
 	push @locations,$h
     }
 
-    #print STDERR "Going to return with ",scalar(@locations),"\n";
-    #foreach my $l ( @locations ) {
-#	print STDERR "location $l ",$l->{'start'}," ",$l->{'end'},"\n";
-#    }
+    print STDERR "Going to return with ",scalar(@locations),"\n";
+    foreach my $l ( @locations ) {
+	print STDERR "location $l ",$l->{'start'}," ",$l->{'end'},"\n";
+    }
 
     return @locations;
 }
