@@ -1,6 +1,27 @@
 
-This distribution is for the bioperl CORBA server
-applications. You will need both bioperl and
-CORBA::ORBit to run this
+
+This distribution is for the bioperl CORBA server applications. You
+will need both bioperl and CORBA::ORBit to run this. (available on
+CPAN) which itself needs Error.pm.
+
+README.bioperl-corba is the README shared with bioper-corba-client
+distribution about how the whole architecture hangs together. Read
+that first.
+
+This distribution has the following source directories:
+
+Bio/CorbaServer/ - the wrapper objects which wrap bioperl objects
+                   as BioCorba objects
+
+servers          - perl scripts which build some objects and then
+                   activate their orbs to run, exposing the objects
+                   for use.
+
+testclients      - simple clients to test the servers are working.
+
+
+This code was started and mainly written by Ewan Birney 
+<birney@ebi.ac.uk>
+
 
 

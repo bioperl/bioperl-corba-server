@@ -1,0 +1,96 @@
+
+
+This distribution is for the bioperl CORBA server applications. You
+will need both bioperl and CORBA::ORBit to run this. (available on
+CPAN) which itself needs Error.pm.
+
+
+The overall architecture of this can get quite confusing. Essentially
+every biological object is going to have 4 different .pm files associated
+with it written by bioperl people and 2 other objects on-the-fly generated
+by CORBA::ORBit
+
+Objects in bioperl:
+-------------------
+
+Bio::xxxxxxI - the interface definition of the object from bioperl's
+               perspective
+Bio::xxxxxx  - the actual implementation object in pure Perl from bioperl
+
+Objects in bioperl-corba-client
+-------------------------------
+
+Bio::CorbaClient::xxxxx - A client wrapper that makes a CORBA connection
+                          behave as if it is Bio::xxxxxxI object
+
+Objects in bioperl-corba-server
+------------------------------
+
+Bio::CorbaServer::xxxxx - A server wrapper that makes a bioperl object
+                          behave as if it is a BioCorba object
+
+Objects created on-the-fly by CORBA::ORBit
+------------------------------------------
+
+BioCorba::xxxxx - A client proxy object
+
+POA_BioCorba::xxx - A server side server adapator object
+
+
+The diagram below sketches out what on earth is going on in the case
+when we run a perl server which use bioperl-corba-server to provide
+objects to a perl client which uses bioperl-corba-client to make
+these objects look like "standard" bioperl objects
+
+As the BioCorba IDL is heavily modelled on the bioperl interfaces, it
+the wrapper classes are very thin - mainly just delegating the methods
+to their respective objects. Having wrapper objects however is a "good thing"
+as it provides a cut-out to allow BioCorba and Bioperl not to have to 
+evolve in lock-step. 
+
+The wrapper classes are is also where the memory management rules of
+the BioCorba system (a very simple reference counting system) is
+implemented. As CORBA is completely agnostic about memory there is a requirement
+for these classes to be around to handle this.
+
+
+  _________________
+  | Bio::xxxxI 	   |
+  -------^---------
+       	 | is-a
+  _______|_________ 	    _____________
+  |Bio::CorbaClient| has-a  | BioCorba:: |
+  | Client Wrapper |------->| Object     |     bioperl-corba-client
+  |________________|   	    |------------|
+ 	   	   		   |
+  ________________________________ | ______________________________________
+ 	       	       	    CORBA IIOP Connection      CORBA::ORBit and ORBit
+ 	   	   		   |
+  _________________________________|_______________________________________
+                                   |
+ 				   |	       bioperl-corba-server
+       	       	       	       	   |
+ 		   	     ---------------  is-a  -------------------
+ 		       	     | POA_BioCorba |<------| Bio::CorbaServer|
+ 			     ----------------	    | Server Wrapper  |
+ 						    ------------------
+ 						   	    |
+ 						   	    | has-a
+ 						   	    |
+ 						     ---------------------
+ 						     | Bio::xxxxI Object |
+       	       	       	       	       	       	     ---------------------
+       	       	       	       	       	       	       	    ^
+							    | is-a
+       	       	       	       	       	       	       	    |
+						     ---------------------
+						     | The real Bio::xxxx |
+       	       	       	       	       	       	     | Object             |
+       	       	       	       	       	       	     ----------------------
+
+Pretty confusing eh? Once you get used to it, it is fine.
+
+The final point to note is that (of course) it need not be Perl on either
+side of the CORBA bridge. Another language could provide these objects
+just as easily, or be clients to the bioperl objects. This is how biojava
+and biopython can communicate with the bioperl objects cleanly.

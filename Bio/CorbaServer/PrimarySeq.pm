@@ -12,7 +12,7 @@
 
 =head1 NAME
 
-Bio::CorbaServer::PrimarySeq - DESCRIPTION of Object
+Bio::CorbaServer::PrimarySeq - PrimarySeq server bindings
 
 =head1 SYNOPSIS
 
@@ -20,7 +20,9 @@ Give standard usage here
 
 =head1 DESCRIPTION
 
-Describe the object here
+This object represents the binding of the Primary Sequence
+object in Bioperl to the BioCorba object. This is pretty
+simple as the objects are almost identical
 
 =head1 FEEDBACK
 
@@ -48,7 +50,6 @@ Report bugs to the Bioperl bug tracking system to help us keep track
 
 Email birney@ebi.ac.uk
 
-Describe contact details here
 
 =head1 APPENDIX
 
@@ -61,6 +62,7 @@ The rest of the documentation details each of the object methods. Internal metho
 
 
 package Bio::CorbaServer::PrimarySeq;
+
 use vars qw($AUTOLOAD @ISA);
 use strict;
 
@@ -69,18 +71,68 @@ use strict;
 use Bio::Root::Object;
 
 
-use AutoLoader;
-@ISA = qw(Bio::Root::Object Exporter);
-@EXPORT_OK = qw();
-# new() is inherited from Bio::Root::Object
+@ISA = qw(POA_BioCorba::PrimarySeq);
 
-# _initialize is where the heavy stuff will happen when new is called
+sub new {
+    my $class = shift;
+    my $seq = shift;
 
-sub _initialize {
-  my($self,@args) = @_;
+    if( ! defined $seq || !ref $seq || !$seq->isa('Bio::PrimarySeqI') ) {
+	die "In CorbaServer PrimarySeq, got a non sequence [$seq] for server object";
+    }
 
-  my $make = $self->SUPER::_initialize;
-
-# set stuff in self from @args
- return $make; # success - we hope!
+    
+    my $self = {};
+    $self->{'seqobj'} = $seq;
+    $self->{'ref_count'} = 1;
+    bless $self,$class;
+    return $self;
 }
+
+sub length {
+    my $self = shift;
+    return $self->{'seqobj'}->length;
+}
+
+sub get_seq {
+    my $self = shift;
+    my $seqstr = $self->{'seqobj'}->seq;
+    print STDERR "Got $seqstr\n";
+    return $seqstr;
+}
+
+sub get_subseq {
+    my $self = shift;
+    my $s = shift;
+    my $e = shift;
+    if( !defined $e ) {
+	die "Someone managed to call get_subseq with no end";
+    }
+
+    return $self->{'seqobj'}->subseq($s,$e);
+}
+
+sub display_id {
+    my $self = shift;
+    return $self->{'seqobj'}->display_id();
+}
+
+sub accession_number {
+    my $self = shift;
+    return $self->{'seqobj'}->accession_number();
+}
+
+sub primary_id {
+    my $self = shift;
+    return $self->{'seqobj'}->primary_id();
+}
+
+sub max_request_length {
+    my $self = shift;
+    return 100000;
+}
+
+1;
+
+
+	    
