@@ -314,17 +314,26 @@ sub get_SeqDB_versions {
 sub get_SeqDB_by_name {
     my ($self, $dbname,$version) = @_;
 
+    print STDERR "Got $dbname and $version\n";
     my $seqdbhead = $self->{'_seqdbs'}->{$dbname};
     if( !defined $seqdbhead ) {
 	throw org::biocorba::seqcore::DoesNotExist 
 	    reason => "$dbname is not a known database name.";	
     }
-    my $seqdb = $seqdbhead->{$version};
-    if( !defined $seqdb ) {
-	throw org::biocorba::seqcore::DoesNotExist 
-	    reason => "$dbname ($version) is not a known database version.";	
+
+    my $seqdb;
+
+    if( $version == 0 ) {
+	my @seqdbs = values %{$seqdbhead};
+	$seqdb = shift @seqdbs;
+    } else {
+	$seqdb = $seqdbhead->{$version};
+	if( !defined $seqdb ) {
+	    throw org::biocorba::seqcore::DoesNotExist 
+		reason => "$dbname ($version) is not a known database version.";	
+	}
     }
-    return $seqdb->get_activated_object_reference;
+    return $seqdb;
 }
 
 1;

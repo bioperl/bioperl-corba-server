@@ -256,13 +256,19 @@ sub locations {
     } 
 
     # recursively build the locations in case they are SplitLocations
-    return [ &_buildlocations($location) ];
+    my @locations = &_buildlocations($location);
+    my $ref = [];
+    push(@$ref,@locations);
+	
+    return $ref;
 }
 
 # for recursively getting all the locations
 
 sub _buildlocations {
     my ($location) = @_;
+
+    #print STDERR "Building a location with $location\n";
 
     my @locations;
     if( $location->isa('Bio::Location::SplitLocationI') ) {
@@ -298,10 +304,17 @@ sub _buildlocations {
 	$endpos = { position => $e,
 		    extension => $e_ext,
 		    fuzzy => $FUZZYCODES{$location->end_pos_type} };
-	push @locations, { start => $startpos,
-			   end   => $endpos,
-			   strand => $location->strand };
+	 my $h = { 'start' => $startpos,
+		   'end'   => $endpos,
+		   'strand' => $location->strand };
+	push @locations,$h
     }
+
+    #print STDERR "Going to return with ",scalar(@locations),"\n";
+    #foreach my $l ( @locations ) {
+#	print STDERR "location $l ",$l->{'start'}," ",$l->{'end'},"\n";
+#    }
+
     return @locations;
 }
 

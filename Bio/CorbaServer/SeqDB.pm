@@ -126,8 +126,15 @@ use Bio::CorbaServer::Seq;
 
 sub get_Seq {
     my ($self,$id) = @_;
+    print STDERR "Getting $id\n";
+
     my $seq = $self->_seqdb->get_Seq_by_acc($id);
-    
+
+    if( $seq->accession ne $id) {
+	$self->warn("This looks like a problem - asked for $id, got ".$seq->accession);
+    }
+
+
     if( defined $seq ) {
 	# data marshall object out	
 	my $servant = Bio::CorbaServer::Seq->new('-poa' => $self->poa, 
