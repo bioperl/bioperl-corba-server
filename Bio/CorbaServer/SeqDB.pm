@@ -115,9 +115,22 @@ sub get_Seq {
     }
 }
 
+=head2 get_primaryidList
+
+ Title   : get_primaryidList
+ Usage   : $self->get_primaryidList()
+ Function:
+ Example :
+ Returns : reference to array containing strings of all primary ids
+           of contained seqs
+ Args    : 
+
+=cut
+
 sub get_primaryidList {
-    my $self = shift;
-    return $self->seqdb->get_all_primary_ids
+    my $self = shift;    
+    my @ids = $self->seqdb->get_all_primary_ids();
+    return [ @ids ];
 }
 
 
