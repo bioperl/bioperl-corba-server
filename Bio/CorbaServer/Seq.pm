@@ -78,149 +78,66 @@ use Bio::Range;
 
 # new is handled by PrimarySeq
 
-=head1 Seq functions
+=head2 get_id
 
-These are the key Seq functions
-
-=head2 all_SeqFeatures
-
- Title   : all_SeqFeatures
- Usage   : my $feats = $obj->all_SeqFeatures(0);
- Function: Return a SeqFeatureVector that allows access to all the
- Example :
- Returns : array of all the features of the sequence
- Args    : boolean whether or not to recurse and include sub feats
-
-=cut
-
-sub all_SeqFeatures {
-    my ($self,$recurse) = @_;
-    my @sf;
-
-    printf STDERR "Entering all_SeqFeatures...with $recurse\n";
-
-    if( $recurse ) {
-	@sf = $self->_seq->all_SeqFeatures();
-    } else { 
-	@sf = $self->_seq->top_SeqFeatures();
-    }
-    my $s = new Bio::CorbaServer::SeqFeatureVector('-poa'   => $self->poa,
-						   '-items' => \@sf);
-    print STDERR "Returning $s with ",scalar(@sf),"\n";
-    return $s->get_activated_object_reference();
-}
-
-=head2 get_SeqFeatures_by_type
-
- Title   : get_SeqFeatures_by_type
- Usage   : my $exons = $seq->get_SeqFeatures_by_type(1,'exon');
- Function: obtain seqFeatures that match a particular SeqFeature type
- Returns : seq features of a certain type
- Args    : recurse  - whether or not to recurse into subseq feats
-           type     - seqfeature type to get
-
-=cut
-
-sub get_SeqFeatures_by_type {
-    my ($self,$recurse,$type) = @_;
-    my (@sf,@feats_to_ret);
-    if( $recurse ) {
-	@sf = $self->_seq->all_SeqFeatures();
-    } else { 
-	@sf = $self->_seq->top_SeqFeatures();
-    }
-    foreach my $feat ( @sf ) {
-	if( $feat->primary_tag =~ /$type/i ) {
-	    push @feats_to_ret,$feat;
-	}
-    }
-    my $s = new Bio::CorbaServer::SeqFeatureVector('-poa'   => $self->poa,
-						  '-items' => \@feats_to_ret);
-    return $s->get_activated_object_reference();
-}
-
-=head2 get_SeqFeatures_in_region
-
- Title   : get_SeqFeatures_in_region
- Usage   : my $feats = $obj->get_SeqFeatures_in_region(100,200, 0);
+ Title   : get_id
+ Usage   :
  Function:
- Example : retrieves SeqFeatures in a specific region
- Returns : Bio::CorbaServer::SeqFeatureVector
- Args    : start   - starting point or area to search (long)
-           end     - ending point of area to search   (long)
-           recurse - include sub_seqfeatures? (boolean)
+ Example :
+ Returns : 
+ Args    :
+
+
 =cut
 
-sub get_SeqFeatures_in_region {
-    my ($self, $start,$end,$recurse) = @_;
-    if( $start > $self->length || $start <= 0 || 
-	$end > $self->length || $end <= 0 || 
-	$end < $start) {
-	throw  org::biocorba::seqcore::OutOfRange (reason=>"requested region ($start..$end) is not valid for this seq (1..". $self->length.").");	
-    }
-    my (@sf,@feats_to_ret);
-    if( $recurse ) {
-	@sf = $self->_seq->all_SeqFeatures();
-    } else { 
-	@sf = $self->_seq->top_SeqFeatures();
-    }
-    my $range = new Bio::Range(-start => $start,
-			       -end   => $end);
-    
-    foreach my $feat ( @sf ) {
-	if( $range->contains($feat) ) {
-	    push @feats_to_ret,$feat;
-	}
-    }
-    my $s = new Bio::CorbaServer::SeqFeatureVector('-poa'   => $self->poa,
-						  '-items' => \@feats_to_ret);
-    return $s->get_activated_object_reference();
+sub get_id{
+   my ($self,@args) = @_;
+
+   return $self->accession_number;
 }
 
-=head2 get_SeqFeatures_in_region_by_type
+=head2 get_name
 
- Title   : get_SeqFeatures_in_region_by_type
- Usage   : my $feats = $obj->get_SeqFeatures_in_region(100,200, 0,'exon');
- Function: retrieve all the seqfeatures in a specific region of a 
-           specified type
- Returns : Bio::CorbaServer::SeqFeatureVector
- Args    : start   - starting point or area to search (long)
-           end     - ending point of area to search   (long)
-           recurse - include sub_seqfeatures? (boolean)
-           type    - type of feature to restrict search by
+ Title   : get_name
+ Usage   :
+ Function:
+ Example :
+ Returns : 
+ Args    :
+
+
 =cut
 
-sub get_SeqFeatures_in_region_by_type {
-    my ($self, $start,$end,$recurse,$type) = @_;
-    if( $start > $self->length || $start <= 0 || 
-	$end > $self->length || $end <= 0 || 
-	$end < $start) {
-	throw  org::biocorba::seqcore::OutOfRange (reason=>"requested region ($start..$end) is not valid for this seq (1..". $self->length.").");	
-    }
-    my (@sf,@feats_to_ret);
-    if( $recurse ) {
-	@sf = $self->_seq->all_SeqFeatures();
-    } else { 
-	@sf = $self->_seq->top_SeqFeatures();
-    }
-    my $range = new Bio::Range(-start => $start,
-			       -end   => $end);
+sub get_name{
+   my ($self) = @_;
 
-    foreach my $feat ( @sf ) {
-	if( $range->contains($feat) && $feat->primary_tag =~ /$type/i ) {
-	    push @feats_to_ret,$feat;
-	}
-    }
-    my $s = new Bio::CorbaServer::SeqFeatureVector('-poa'   => $self->poa,
-						   '-items' => \@feats_to_ret);
-    return $s->get_activated_object_reference();
-
+   return $self->display_id
 }
 
-=head2 get_PrimarySeq
+=head2 get_description
 
- Title   : get_PrimarySeq
- Usage   : my $pseq = $seq->get_PrimarySeq
+ Title   : get_description
+ Usage   :
+ Function:
+ Example :
+ Returns : 
+ Args    :
+
+
+=cut
+
+sub get_description{
+   my ($self) = @_;
+
+   return $self->desc;
+}
+
+
+
+=head2 get_anonymous_sequence
+
+ Title   : get_anonymous_sequence
+ Usage   : my $pseq = $seq->get_anonymous_sequence
  Function: returns a primary sequence with no features attached
  Returns : Bio::CorbaServer::PrimarySeq  
  Args    : none
@@ -231,7 +148,7 @@ It prevents a sequence with features having to stay in memory for ever.
 
 =cut
 
-sub get_PrimarySeq {
+sub get_anonymous_sequence {
     my ($self) = @_;
     my $s =  new Bio::CorbaServer::PrimarySeq('-poa' => $self->poa,
 					      '-seq' => $self->_seq->primary_seq);

@@ -66,25 +66,52 @@ package Bio::CorbaServer::PrimarySeq;
 
 use vars qw($AUTOLOAD @ISA);
 use strict;
-use Bio::Range;
+use Bio::CorbaServer::Base;
 
-use Bio::CorbaServer::AnonymousSeq;
+BEGIN { print STDERR "Accessing this module\n"; };
 
-@ISA = qw(POA_org::biocorba::seqcore::PrimarySeq 
-	Bio::CorbaServer::AnonymousSeq );
+@ISA = qw(Bio::CorbaServer::Base POA_bsane::seqcore::AnonymousSequence );
+
+sub new {
+    my ($class, @args) = @_;
+    my $self = $class->SUPER::new(@args);
+    my ($seq) = $self->_rearrange([qw(SEQ)],@args);
+
+    if( ! defined $seq || !ref $seq || ! $seq->isa('Bio::PrimarySeqI') ) {
+	$seq = '' if( !defined $seq );
+	$self->throw($class ." got a non sequence [$seq] for server object");
+    }
+    $self->_seq($seq);
+    $self->is_circular(0);  
+    return $self;
+}
 
 =head1 AnonymousSeq Methods
 
-=head2 type
+=head2 get_type
 
- Title   : type
- Usage   : my $type = $self->type();
+ Title   : get_type
+ Usage   : my $type = $self->get_type();
  Function: Return the type of the biological sequence, e.g. PROTEIN,
 	   RNA, DNA,
  Returns : type [ PROTEIN, RNA, DNA]
  Args    : [optional] type to set for this sequence
 
 =cut
+
+sub get_type {
+    my $self = shift;
+    my $moltype = uc $self->_seq->moltype;
+    if(  $moltype eq 'DNA' ) {
+	return 1;
+    } elsif ( $moltype eq 'RNA' ) {
+	return 2;
+    } elsif ( $moltype =~ /PROT/i ) {
+	return 0;
+    } else { 
+	return -1;
+    }
+}
 
 =head2 is_circular
 
@@ -97,15 +124,30 @@ use Bio::CorbaServer::AnonymousSeq;
 
 =cut
 
-=head2 length
+sub is_circular {
+    my ($self,$value) = @_;
+    if( defined $value ) {
+	$self->{'_circular'} = $value;
+    }
+    return $self->{'_circular'} ? 1 : 0;
+}
 
- Title   : length
- Usage   : my $len = $obj->length
+
+=head2 get_length
+
+ Title   : get_length
+ Usage   : my $len = $obj->get_length
  Function: returns length of biological sequence
  Returns : long
  Args    : none
 
 =cut
+
+sub get_length {
+    my $self = shift;
+    return $self->_seq->length();
+}
+
 
 =head2 seq
 
@@ -117,84 +159,45 @@ use Bio::CorbaServer::AnonymousSeq;
 
 =cut
 
-=head2 subseq
+sub seq {
+    my $self = shift;
+    my $seqstr = $self->_seq->seq;
+    return $seqstr;
+}
 
- Title   : subseq
- Usage   : $self->subseq($begin,$end)
+=head2 sub_seq
+
+ Title   : sub_seq
+ Usage   : $self->sub_seq($begin,$end)
  Function: obtains a subsequence of the biological sequence as a string
  Returns : subseq of sequence beginning at start finishing at end
  Args    : start - start point of substring to obtain (sequence start at 1)
            end   - end point of substring to obtain
 =cut
 
-=head1 PrimarySeq Methods
-
-PrimarySeq interface methods implemented
-
-=head2 version
-
- Title   : version
- Usage   : my $version = $obj->version
- Function: obtain the sequence version
- Returns : long representing the sequence version (0 if no version) 
- Args    : none
-
-=cut
-
-sub version {
-    my ($self) = @_;    
-    return $self->_version;
-}
-
-=head2 display_id
-
- Title   : display_id
- Usage   : $seq->display_id
- Function:
- Returns : display id for sequence
- Args    : none
-
-=cut
-
-sub display_id {
-    my $self = shift;
-    my $str = $self->_seq->display_id;
-    return $str;
-}
-
-=head2 accession_number
-
- Title   : accession_number
- Usage   : $seq->accession_number
- Function:
- Returns : accession number for sequence
- Args    : none
-
-=cut
-
-sub accession_number {
-    my $self = shift;
-    my $str = $self->_seq->accession_number();
-    return $str;
-}
-
-=head2 primary_id
-
- Title   : primary_id
- Usage   : $seq->primary_id
- Function:
- Returns : primary id of sequence
- Args    : none
-
-=cut
-
-sub primary_id {
-    my $self = shift;
-    my $str = $self->_seq->primary_id();
-    if( $str =~ /hash\((0x[0-9a-f]+)\)/i ) {
-	$str = $1;
+sub sub_seq {
+    my ($self,$start,$end) = @_;
+    if( !defined $end || !defined $start || ($end < $start) ) {
+	$start = '' if( !defined $start);
+	$end = '' if( !defined $end);
+	throw org::biocorba::seqcore::OutOfRange
+	    (reason=>"start is not before end ($start,$end");
+    } elsif( ($end - $start ) > $self->max_request_length ) {
+	throw org::biocorba::seqcore::RequestTooLarge
+	    (reason=> ($end-$start) . " is larger than max request length", 
+	     suggested_size=>$self->max_request_length);
     } 
-    return "bioperlid:".hex($str);
+
+    my $ret;
+    eval {
+	$ret = $self->_seq->subseq($start,$end);
+    };
+    if( $@ ) {
+	#set exception
+	throw org::biocorba::seqcore::RequestTooLarge(reason=>"parameters $start, $end were too large");
+    } else {
+	return $ret;
+    }
 }
 
 =head1 Private Methods
@@ -220,30 +223,23 @@ sub _seq {
     return $self->{'_seqobj'};
 }
 
-=head1 _version
+=head2 max_request_length
 
- Title   : _version
- Usage   : get/set version
- Function: if seq object is a RichSeqI it has a seq_version method so
-           seq_version is used if possible otherwise revert to locally 
-           stored value.
-    
- Example : $self->_version($newversion)
- Returns : version string
- Args    : version to set
+ Title   : max_request_length
+ Usage   :
+ Function:
+ Example :
+ Returns : 
+ Args    :
+
 
 =cut
 
-sub _version {
-    my ($self,$value) = @_;
-    if( $self->_seq->can('seq_version') ) {
-	return $self->_seq->seq_version($value);
-    }
-    if( defined $value || ! defined $self->{'_version'}) {
-	$self->{'_version'} = 0 if( !defined $value );
-	$self->{'_version'} = $value;
-    }    
-    return $self->{'_version'};
+sub max_request_length{
+   my ($self,@args) = @_;
+
+   return 100000;
 }
+
 
 1;
