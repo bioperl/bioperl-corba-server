@@ -238,5 +238,71 @@ sub max_request_length{
    return 100000;
 }
 
+=head2 Identifiable interface
+
+=head2 get_id
+
+ Title   : get_id
+ Usage   : my $id = $seq->accession();
+ Function: Retrieve a sequence id (accession number)
+ Returns : string
+ Args    : none
+
+
+=cut
+
+sub get_id{
+   my ($self) = @_;
+   return $self->_seq->accession || $self->_seq->display_id();
+}
+
+=head2 get_name
+
+ Title   : get_name
+ Usage   : my $name = $seq->get_name();
+ Function: Retrieves a sequence name
+ Returns : string
+ Args    : nonex
+
+
+=cut
+
+sub get_name{
+   my ($self) = @_;
+   return $self->_seq->display_id();
+}
+
+=head2 get_description
+
+ Title   : get_description
+ Usage   : my $desc = $seq->get_description();
+ Function: Retrieves the description for this sequence
+ Returns : string 
+ Args    : none
+
+
+=cut
+
+sub get_description{
+   my ($self,@args) = @_;
+   return $self->_seq->desc();
+}
+
+=head2 get_basis
+
+ Title   : get_basis
+ Usage   : my $basis = $seq->get_basis
+ Function: Retrieves the basis this sequence is from (always experimental)
+ Returns : numeric
+ Args    : none
+
+
+=cut
+
+sub get_basis{
+   my ($self) = @_;
+   return 1; # 1 is experimental
+
+}
 
 1;
