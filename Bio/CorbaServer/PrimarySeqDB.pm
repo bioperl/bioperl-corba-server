@@ -69,7 +69,7 @@ use Bio::CorbaServer::Base;
 use Bio::CorbaServer::PrimarySeqIterator;
 
 
-@ISA = qw(POA_org::Biocorba::Seqcore::PrimarySeqDB Bio::CorbaServer::Base);
+@ISA = qw(POA_org::biocorba::seqcore::PrimarySeqDB Bio::CorbaServer::Base);
 
 sub new { 
     my ($class,$poa,$name,$seqdb, @args) = @_;
@@ -82,7 +82,7 @@ sub new {
 	$self->throw("Could not make a Corba Server from a non Bio::DB::SeqI interface, $seqdb");
     }
     # should we make it more generic?
-    $self->seqdb($seqdb);
+    $self->_seqdb($seqdb);
     return $self;
 }
 
@@ -167,27 +167,25 @@ sub get_PrimarySeq {
 	my $temp = $self->poa->id_to_reference($id);
 	return $temp;
     } else {
-	throw org::Biocorba::Seqcore::UnableToProcess
+	throw org::biocorba::seqcore::UnableToProcess
 	    ( reason => ref($self)." could not find seq for $id");
     }
 }
 
-=head1 PrimarySeqDB Only Methods 
+=head1 Protected PrimarySeqDB  
 
-These methods are not in the IDL, but are provided to the server object
+=head2 _seqdb
 
-=head2 seqdb
-
- Title   : seqdb
+ Title   : _seqdb
  Usage   : 
- Function:
+ Function: get/set the underlying seqdb reference
  Example :
  Returns : reference to seqdb object
  Args    : 
 
 =cut
 
-sub seqdb {
+sub _seqdb {
     my ($self,$value) = @_;
     $self->{_seqdb} = $value if ( defined $value);
     return $self->{_seqdb};

@@ -70,14 +70,14 @@ use Bio::CorbaServer::Base;
 
 # Object preamble - inherits from Bio::Root::Object
 
-@ISA = qw(POA_org::Biocorba::Seqcore::PrimarySeq Bio::CorbaServer::Base);
+@ISA = qw(POA_org::biocorba::seqcore::PrimarySeq Bio::CorbaServer::Base);
 
 sub new {
     my ($class, $poa, $seq, @args) = @_;
     
     if( ! defined $seq || !ref $seq || ! $seq->isa('Bio::PrimarySeqI') ) {
 	$seq = '' if( !defined $seq );
-	throw org::Biocorba::Seqcore::UnableToProcess 
+	throw org::biocorba::seqcore::UnableToProcess 
 	    (reason=>$class ." got a non sequence [$seq] for server object");
     }
 
@@ -95,22 +95,6 @@ sub new {
 
 Implemented AnonymousSeq Methods
 
-=head2 length
-
- Title   : length
- Usage   :
- Function:
- Example :
- Returns : 
- Args    :
-
-=cut
-
-sub length {
-    my $self = shift;
-    return $self->_seq->length;
-}
-
 =head2 type
 
  Title   : type
@@ -124,12 +108,55 @@ sub length {
 
 sub type {
     my $self = shift;
-    return uc ($self->_seq->moltype);
+    my $moltype = uc $self->_seq->moltype;
+    if(  $moltype eq 'DNA' ) {
+	return 1;
+    } elsif ( $moltype eq 'RNA' ) {
+	return 2;
+    } elsif ( $moltype =~ /PROT/i ) {
+	return 0;
+    } else { 
+	return -1;
+    }
 }
 
-=head2 get_seq
+=head2 is_circular
 
- Title   : get_seq
+ Title   : is_circular
+ Usage   : $obj->is_circular()
+ Function: Return whether the biological sequence is circular or linear
+ Example :
+ Returns : boolean
+ Args    :
+
+=cut
+
+sub is_circular {
+    my $self = shift;
+    return 0;
+}
+
+
+=head2 length
+
+ Title   : length
+ Usage   :
+ Function:
+ Example :
+ Returns : 
+ Args    :
+
+=cut
+
+sub length {
+    my $self = shift;
+    return $self->_seq->length();
+}
+
+
+=head2 seq
+
+ Title   : seq
  Usage   :
  Function:
  Example :
@@ -138,16 +165,16 @@ sub type {
 
 =cut
 
-sub get_seq {
+sub seq {
     my $self = shift;
     my $seqstr = $self->_seq->seq;
     return $seqstr;
 }
 
-=head2 get_subseq
+=head2 subseq
 
- Title   : get_subseq
- Usage   : $self->get_subseq($begin,$end)
+ Title   : subseq
+ Usage   : $self->subseq($begin,$end)
  Function:
  Example :
  Returns : subseq of sequence beginning at start finishing at end
@@ -155,17 +182,17 @@ sub get_seq {
 
 =cut
 
-sub get_subseq {
+sub subseq {
     my $self = shift;
     my $start = shift;
     my $end = shift;
     if( !defined $end || !defined $start || ($end < $start) ) {
 	$start = '' if( !defined $start);
 	$end = '' if( !defined $end);
-	throw org::Biocorba::Seqcore::OutOfRange
+	throw org::biocorba::seqcore::OutOfRange
 	    (reason=>"start is not before end ($start,$end");
     } elsif( ($end - $start ) > $self->max_request_length ) {
-	throw org::Biocorba::Seqcore::RequestTooLarge
+	throw org::biocorba::seqcore::RequestTooLarge
 	    (reason=> ($end-$start) . " is larger than max request length", 
 	     suggested_size=>$self->max_request_length);
     } 
@@ -175,27 +202,14 @@ sub get_subseq {
 	$ret = $self->_seq->subseq($start,$end);
     };
     if( $@ ) {
+	throw org::biocorba::seqcore::RequestTooLarge
+
 	#set exception
     } else {
 	return $ret;
     }
 }
 
-=head2 max_request_length
-
- Title   : max_request_length
- Usage   :
- Function: The maximum length of a sequence this server will handle 
- Example :
- Returns : integer representing maximum length
- Args    :
-
-=cut
-
-sub max_request_length {
-    my $self = shift;
-    return 100000;
-}
 
 =head2 version
 
@@ -211,7 +225,11 @@ sub max_request_length {
 sub version {
     my ($self,$value) = @_;
     if( defined $value) {
-	$self->{_version} = $value;
+	if( $version =~ /^(\s+)?\d+(\s+)?$/ ) {
+	    $self->{_version} = $value;
+	} else {
+	    throw org::biocorba::seqcore::UnableToProcess( reason => "version must be a number not $value");
+	}
     }
     return $self->{_version};
 }

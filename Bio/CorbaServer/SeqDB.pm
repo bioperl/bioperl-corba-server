@@ -69,7 +69,7 @@ use Bio::CorbaServer::PrimarySeqIterator;
 use Bio::CorbaServer::Seq;
 
 
-@ISA = qw(POA_org::Biocorba::Seqcore::SeqDB Bio::CorbaServer::PrimarySeqDB);
+@ISA = qw(POA_org::biocorba::seqcore::SeqDB Bio::CorbaServer::PrimarySeqDB);
 
 sub new {
     my ($class,$poa,$name,$seqdb, @args) = @_;
@@ -83,7 +83,7 @@ sub new {
 	$self->throw("Could not make a Corba Server from a non Bio::DB::SeqI interface, $seqdb");
     }
     # should we make it more generic?
-    $self->seqdb($seqdb);
+    $self->_seqdb($seqdb);
     return $self;
 }
 
@@ -103,7 +103,7 @@ sub new {
 sub get_Seq {
     my $self = shift;
     my $id   = shift;
-    my $seq = $self->seqdb->fetch($id);
+    my $seq = $self->_seqdb->fetch($id);
     
     if( defined $seq ) {
 	# data marshall object out	
@@ -112,7 +112,7 @@ sub get_Seq {
 	my $temp = $self->poa->id_to_reference($id);
 	return $temp;
     } else {
-	throw org::Biocorba::Seqcore::UnableToProcess
+	throw org::biocorba::seqcore::UnableToProcess
 	    ( reason => ref($self)." could not find seq for $id");	
     }
 }
@@ -131,7 +131,7 @@ sub get_Seq {
 
 sub get_primaryidList {
     my $self = shift;    
-    my @ids = $self->seqdb->get_all_primary_ids();
+    my @ids = $self->_seqdb->get_all_primary_ids();
     return [ @ids ];
 }
 

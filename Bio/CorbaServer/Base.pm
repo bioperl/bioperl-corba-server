@@ -64,15 +64,14 @@ package Bio::CorbaServer::Base;
 use vars qw($AUTOLOAD @ISA);
 use strict;
 
-# Object preamble - inherits from Bio::Root::Object
-use Bio::Root::Object;
-@ISA = qw(Bio::Root::Object);
+# Object preamble - inherits from Bio::Root::RootI
+use Bio::Root::RootI;
+@ISA = qw(Bio::Root::RootI);
 
 sub new {
     my ($class, $poa, @args) = @_;
 
-    my $self = {};
-    bless $self,$class;
+    my $self = bless {}, $class;
 
     my ($no_destroy) = $self->_rearrange(['NO_DESTROY'], @args);
 

@@ -75,7 +75,7 @@ use strict;
 use Bio::SeqIO;
 use Bio::CorbaServer::PrimarySeq;
 
-@ISA = qw(Bio::CorbaServer::Base POA_org::Biocorba::Seqcore::PrimarySeqIterator);
+@ISA = qw(Bio::CorbaServer::Base POA_org::biocorba::seqcore::PrimarySeqIterator);
 
 
 sub new {
@@ -110,7 +110,7 @@ sub next{
    my ($self) = @_;
    my $seq;
    if( $self->at_end == 1 ) {
-       throw org::Biocorba::Seqcore::EndOfStream;
+       throw org::biocorba::seqcore::EndOfStream;
    }
    $seq= $self->_next_seq();
    $self->_reload();

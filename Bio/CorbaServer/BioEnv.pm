@@ -69,7 +69,7 @@ use Bio::CorbaServer::PrimarySeq;
 use Bio::CorbaServer::Base;
 use Bio::CorbaServer::PrimarySeqIterator;
 
-@ISA = qw( Bio::CorbaServer::Base POA_org::Biocorba::Seqcore::BioEnv);
+@ISA = qw( Bio::CorbaServer::Base POA_org::biocorba::seqcore::BioEnv);
 
 
 sub new {
@@ -134,7 +134,7 @@ sub PrimarySeqIterator_from_file {
     };
     
     if ($@) {
-        throw org::Biocorba::Seqcore::UnableToProcess 
+        throw org::biocorba::seqcore::UnableToProcess 
 		  reason => 'Could not load the file or file format.';
     } else {
         my $servant = Bio::CorbaServer::PrimarySeqIterator->new($self->poa, 

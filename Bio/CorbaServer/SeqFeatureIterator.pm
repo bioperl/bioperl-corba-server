@@ -65,7 +65,7 @@ use strict;
 use Bio::CorbaServer::Base;
 
 
-@ISA = qw(Bio::CorbaServer::Base POA_org::Biocorba::Seqcore::SeqFeatureIterator);
+@ISA = qw(Bio::CorbaServer::Base POA_org::biocorba::seqcore::SeqFeatureIterator);
 
 
 sub new {
@@ -88,7 +88,7 @@ sub next {
     if( $#{$self->{'array'}} >= 0 ) {
 	return shift @{$self->{'array'}};
     } else {
-	throw org::Biocorba::Seqcore::EndOfStream;
+	throw org::biocorba::seqcore::EndOfStream;
     }
 }
 

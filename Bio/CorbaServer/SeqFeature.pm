@@ -65,7 +65,7 @@ use strict;
 use Bio::CorbaServer::Base;
 
 
-@ISA = qw(POA_org::Biocorba::Seqcore::SeqFeature Bio::CorbaServer::Base);
+@ISA = qw(POA_org::biocorba::seqcore::SeqFeature Bio::CorbaServer::Base);
 
 
 sub new {
@@ -230,7 +230,7 @@ sub PrimarySeq_is_available{
 sub get_PrimarySeq{
    my ($self,@args) = @_;
 
-   throw org::Biocorba::Seqcore::UnableToProcess;
+   throw org::biocorba::seqcore::UnableToProcess;
 }
 
 

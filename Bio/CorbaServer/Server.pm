@@ -167,7 +167,7 @@ For more information about the Bio::CorbaServer::Server system
 please see the Bio::CorbaServer::Server docs.
 This includes ways of checking for formats at compile time, not run time
 END
-  ;
+;
     return;
   }
   return 1;

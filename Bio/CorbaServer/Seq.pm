@@ -74,7 +74,7 @@ use Bio::CorbaServer::PrimarySeq;
 use Bio::CorbaServer::SeqFeature;
 use Bio::CorbaServer::SeqFeatureIterator;
 
-@ISA = qw(POA_org::Biocorba::Seqcore::Seq Bio::CorbaServer::PrimarySeq);
+@ISA = qw(POA_org::biocorba::seqcore::Seq Bio::CorbaServer::PrimarySeq);
 
 sub new {
     my ($class, $poa, $seq, @args) = @_;
@@ -82,10 +82,10 @@ sub new {
     my $self = Bio::CorbaServer::PrimarySeq->new($poa, $seq, @args);
 
     if( ! defined $seq || !ref $seq || ! $seq->isa('Bio::SeqI') ) {
-	throw  org::Biocorba::Seqcore::UnableToProcess (reason=>"Got a non sequence [$seq]");	
+	throw  org::biocorba::seqcore::UnableToProcess (reason=>"Got a non sequence [$seq]");	
     }
     bless $self,$class;
-    $self->seq($seq);
+    $self->_seq($seq);
     return $self;
 }
 
@@ -109,7 +109,7 @@ sub all_features {
     my @sf;
     my @ret;
 
-    @sf = $self->seq->all_SeqFeatures();
+    @sf = $self->_seq->all_SeqFeatures();
 
     foreach my $sf ( @sf ) {
 	my $serv = Bio::CorbaServer::SeqFeature->new($self->poa,$sf);
@@ -163,22 +163,6 @@ sub features_region_iterator {
 
 }
 
-=head2 max_feature_request
-
- Title   : max_feature_request
- Usage   :
- Function:
- Example :
- Returns : integer of maximum number of features server can return
- Args    :
-
-=cut
-
-# this should be determined at some point
-sub max_feature_request {
-    return 100000;
-}
-
 =head2 get_PrimarySeq
 
  Title   : get_PrimarySeq
@@ -196,33 +180,11 @@ It prevents a sequence with features having to stay in memory for ever.
 
 sub get_PrimarySeq {
     my $self = shift;
-    my $servant = Bio::CorbaServer::PrimarySeq->new($self->poa,$self->seq->primary_seq);
+    my $servant = Bio::CorbaServer::PrimarySeq->new($self->poa,$self->_seq->primary_seq);
 
    my $id = $self->poa->activate_object ($servant);
    my $temp = $self->poa->id_to_reference ($id);
    return $temp;
-
-}
-
-
-=head2 seq
-
- Title   : seq
- Usage   : $obj->seq($newval)
- Function: 
- Example : 
- Returns : value of seq
- Args    : newvalue (optional)
-
-
-=cut
-
-sub seq {
-   my ($obj,$value) = @_;
-   if( defined $value) {
-      $obj->{'seq'} = $value;
-    }
-    return $obj->{'seq'};
 
 }
 
