@@ -1,0 +1,29 @@
+$Id: PLATFORMS,v 1.1 2001-03-07 14:34:40 jason Exp $
+
+This code will run on most ORBit Corba servers with Perl ORBit bindings.
+
+  o Interoperability with Python bindings and a mico and fnorb corba
+    server have been tested and no serious bugs were found.
+  o Interoperability with Java bindings have been tested and no
+    serious bugs were found.
+ 
+If you try this software on a platform not listed, please email the
+biocorba list (biocorba-l@biocorba.org) so we can update this file
+and/or help you track down any bugs.
+ 
+Tested systems & OS Specific Comments or Warnings
+==================================================
+
+Machine : Solaris 2.x UltraSparc (64bit)
+Compiler: gcc
+Perl    : 5.005_03, 5.6.0, 
+ORBit   : 0.5.4; CORBA::ORBit v0.4.3 
+Comments: none
+
+Machine : FreeBSD i386
+Compiler: gcc
+Perl    : 5.005_03
+ORBit   : 0.5.7; CORBA::ORBit v0.4.3
+Comments: There are misc errors with this version of ORBit on FreeBSD.
+	  These are still being tracked down.  Please try an older version of
+	  ORBit and report to the list.
