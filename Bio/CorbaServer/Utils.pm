@@ -121,10 +121,10 @@ BEGIN {
 sub create_Bioperl_location_from_BSANE_location {
     my ($bsaneloc) = @_;
 
-    my $type = 'Bio::Location::Simple';
+    my $type = 'Bio::Location::Simple'; # default type of locations
     my @args;
 
-    # WHAT ABOUT STRAND and EXTENSION
+    # WHAT ABOUT STRAND and EXTENSION -- DONE
 
     foreach my $pl ( qw(start end) ) {
 	my $p = $bsaneloc->{'seq_location'}->{$pl};
@@ -132,6 +132,7 @@ sub create_Bioperl_location_from_BSANE_location {
 	( "-$pl" => $p->{'position'},
 	  "-$pl\_ext" => $p->{'extension'},# if this is zero no worries
 	  "-$pl\_fuz" => $p->{'fuzzy'},	   # if this is 1 or 'EXACT' no worries
+	  "-strand"   => $p->{'strand'},
 	  );
 	if( $p->{'fuzzy'} > 1 || $p->{'extension'} > 0 ) {
 	    $type = 'Bio::Location::Fuzzy';
@@ -167,7 +168,6 @@ sub create_BSANE_location_from_Bioperl_location {
     return undef if( ! $location );
     my $splittype = $SeqFeatureLocationOperator{'NONE'};
     my $locations = [];
-
 
     if( $location->isa('Bio::Location::SplitLocationI') ) {
 	my @a = $location->sub_Location;
