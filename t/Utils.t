@@ -40,7 +40,7 @@ ok ($t1->{'seq_location'}->{'end'}->{'extension'}, 0);
 ok ($t1->{'seq_location'}->{'end'}->{'fuzzy'}, 1);
 
 ok ($t1->{'seq_location'}->{'strand'}, $simple->strand);
-ok (! defined $t1->{'sub_seq_locations'});
+ok (scalar @{$t1->{'sub_seq_locations'}},0);
 ok ($t1->{'region_operator'}, 0);
 $t1 = undef;
 my $fuzzy = new Bio::Location::Fuzzy('-start' => "10.14",
@@ -58,7 +58,7 @@ ok ($t2->{'seq_location'}->{'end'}->{'extension'}, 0);
 ok ($t2->{'seq_location'}->{'end'}->{'fuzzy'}, 5);
 
 ok ($t2->{'seq_location'}->{'strand'}, $fuzzy->strand);
-ok (! defined $t2->{'sub_seq_locations'});
+ok (scalar @{$t2->{'sub_seq_locations'}},0);
 ok ($t2->{'region_operator'}, 0);
 $t2 = undef;
 
@@ -76,9 +76,8 @@ ok ($t3->{'seq_location'}->{'end'}->{'fuzzy'}, 1);
 
 ok ($t3->{'seq_location'}->{'strand'}, $simple->strand);
 
-ok (defined $t3->{'sub_seq_locations'});
+ok (@{$t3->{'sub_seq_locations'}},1);
 ok ($t3->{'region_operator'}, 1);
-
 ($t2) = @{$t3->{'sub_seq_locations'}};
 
 ok ($t2);
@@ -90,6 +89,5 @@ ok ($t2->{'seq_location'}->{'end'}->{'extension'}, 0);
 ok ($t2->{'seq_location'}->{'end'}->{'fuzzy'}, 5);
 
 ok ($t2->{'seq_location'}->{'strand'}, $fuzzy->strand);
-ok (! defined $t2->{'sub_seq_locations'});
+ok (scalar @{$t2->{'sub_seq_locations'}},0);
 ok ($t2->{'region_operator'}, 0);
-
