@@ -158,7 +158,7 @@ sub get_annotations {
 sub get_features_on_region {
    my ($self,$how_many, $seq_region, $the_rest) = @_;
    if( ! $seq_region || ! ref($seq_region) ) {
-       throw bsane::seqcore::UnableToProcess
+       throw bsane::UnableToProcess
 	   ( reason => ref($self). " get_features_on_region got invalid seq_region parameter (".ref($seq_region).")");	
    }
    my $seq = $self->_seq;

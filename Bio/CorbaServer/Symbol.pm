@@ -15,12 +15,15 @@
 Bio::CorbaServer::Symbol - A Symbol as part of an alphabet
 
 =head1 SYNOPSIS
-
-Give standard usage here
+    
+    use Bio::CorbaServer::Symbol;
+    my $symbol = new Bio::CorbaServer::Symbol(-symbol => $bioperlsymbolobj,
+ 					      -poa    => $poa);
+    $symbol->get_activated_object_reference;
 
 =head1 DESCRIPTION
 
-Describe the object here
+This is a wrapper for BSANE/BioCORBA objects around Bioperl objects.  
 
 =head1 FEEDBACK
 
@@ -143,9 +146,9 @@ sub get_symbols{
    my ($self) = @_;
    my $ref = [];
    foreach my $s ($self->_symbol->symbols()) {
-       my $s = new Bio::CorbaServer::Symbol('-poa' => $self->poa,
-					    '-symbol' => $s);       
-       push @$ref, $s->get_activated_object_reference();
+       my $sym = new Bio::CorbaServer::Symbol('-poa' => $self->poa,
+					      '-symbol' => $s);       
+       push @$ref, $sym->get_activated_object_reference();
 
    }       
    return $ref;

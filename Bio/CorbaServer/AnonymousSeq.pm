@@ -65,9 +65,9 @@ package Bio::CorbaServer::AnonymousSeq;
 use vars qw($AUTOLOAD @ISA);
 use strict;
 
-use Bio::CorbaServer::Base;
+use Bio::CorbaServer::PrimarySeq;
 
-@ISA = qw( POA_org::biocorba::seqcore::AnonymousSeq Bio::CorbaServer::Base );
+@ISA = qw( POA_org::biocorba::seqcore::AnonymousSeq Bio::CorbaServer::PrimarySeq );
 
 
 1;

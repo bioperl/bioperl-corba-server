@@ -23,8 +23,8 @@ Bio::CorbaServer::SeqDB - DESCRIPTION of Object
     my $version = $db->version;
     my $maxseqlen = $db->max_sequence_length();
     try { 
-	my $seq = $db->get_PrimarySeq('AC002010', 1);
-    } catch org::biocorba::seqcore::UnableToProcess with { 
+	my $seq = $db->get_PrimarySeq('AC002010.1');
+    } catch bsane::seqcore::UnableToProcess with { 
 	my $e = shift;
 	print STDERR "trouble processing accession 'AC002010.1', error was : ",
 	$e->{reason}, "\n";
@@ -39,14 +39,13 @@ Bio::CorbaServer::SeqDB - DESCRIPTION of Object
     # SeqDB specific methods
     try { 
 	# get a Seq with Features
-	my $seq = $db->get_Seq('AC002010', 1);
-    } catch org::biocorba::seqcore::UnableToProcess with { 
+	my $seq = $db->resolve('AC002010');
+    } catch bsane::seqcore::UnableToProcess with { 
 	my $e = shift;
 	print STDERR "trouble processing accession 'AC002010.1', error was : ",
 	$e->{reason}, "\n";
     }
   
-    my @accessions = $db->accession_numbers();
 
 =head1 DESCRIPTION
 
@@ -100,7 +99,8 @@ package Bio::CorbaServer::SeqDB;
 use vars qw(@ISA);
 use strict;
 
-# Object preamble - inherits from Bio::CorbaServer::PrimarySeqDB
+# Object preamble - inherits from Bio::CorbaServer::Base
+use Bio::CorbaServer::Base;
 use Bio::CorbaServer::Seq;
 
 @ISA = qw(POA_bsane::collection::BioSequenceCollection 
@@ -111,10 +111,10 @@ sub new {
     my $self = $class->SUPER::new(@args);
     my ($seqdb) = $self->_rearrange([qw(SEQDB)],@args);
     if( ! defined $seqdb || !ref $seqdb || 
-	! $seqdb->isa('Bio::DB::RandomAccessI') ) {
+	! $seqdb->isa('Bio::DB::SeqI') ) {
         $seqdb = '' if( !defined $seqdb );
         $self->throw($class ." got a non sequencedb [$seqdb] for server object");
-    }
+    }    
     $self->_seqdb($seqdb);
     return $self;
 }
@@ -149,8 +149,8 @@ sub resolve{
 =head2 get_seqs
 
  Title   : get_seqs
- Usage   :
- Function:
+ Usage   : my @seqs = $db->get_seqs($howmany, $iterator)
+ Function: Returns the list of sequences, 
  Example :
  Returns : 
  Args    :
@@ -159,10 +159,44 @@ sub resolve{
 =cut
 
 sub get_seqs{
-   my ($self,@args) = @_;
-
+   my ($self,$howmany,$iterator) = @_;
+   # this better be an index handle
+   if(! $self->_seqdb->isa('Bio::Index::Abstract') ) {
+       throw bsane::OutOfBounds('reason' => 'cannot call get_seqs on a non Indexed database');
+   }
+   
+   my $list = [];
+   my $seqio = $self->_seqdb->get_PrimarySeq_stream();
+   my $count = 0;
+   while( $count++ < $howmany && defined (my $s = $seqio->next_seq) ) {
+       my $sobj = new Bio::CorbaServer::Seq('-poa' => $self->poa,
+					    '-seq' => $s);
+       push @$list, $sobj->get_activated_object_reference();
+   }
+   $iterator = new Bio::CorbaServer::SeqIterator('-poa' => $self->poa,
+						 '-seqio' => $seqio);
+      
+   return $list;
 }
 
+
+=head2 bsane::Annotatable methods
+
+=head2 get_annotations
+
+ Title   : get_annotations
+ Usage   : my @annotations = $db->get_annotations()
+ Function: Get the annotations associated with this object?
+ Returns : List of annotations
+ Args    : none
+
+
+=cut
+
+sub get_annotations{
+   my ($self) = @_;
+   throw bsane::IllegalSymbolException('reason' => 'The get_annotations method is not implemented by the bioperl biocorba implementation');
+}
 
 =head2 _seqdb
 

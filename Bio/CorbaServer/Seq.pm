@@ -72,6 +72,9 @@ use Bio::CorbaServer::PrimarySeq;
 use Bio::CorbaServer::Base;
 use Bio::CorbaServer::SeqFeatureCollection;
 use Bio::CorbaServer::AnnotationCollection;
+use Bio::CorbaServer::Alphabet;
+use Bio::Symbol::DNAAlphabet;
+use Bio::Symbol::ProteinAlphabet;
 
 @ISA = qw( POA_bsane::seqcore::BioSequence Bio::CorbaServer::PrimarySeq  );
 
@@ -141,7 +144,18 @@ sub get_annotations {
 
 sub get_alphabet{
    my ($self,@args) = @_;
+   my $alphabet;
+   if( $self->_seq->alphabet eq 'dna' ) {
+       $alphabet = new Bio::Symbol::DNAAlphabet();
 
+   } elsif( $self->_seq->alphabet eq 'protein' ) {
+       $a = new Bio::Bio::Symbol::ProteinAlphabet();
+   } else {
+       throw bsane::IllegalSymbolException('reason' => 'Alphabet type '. $self->_seq->alphabet . ' is unknown');
+   }
+   my $a = new Bio::CorbaServer::Alphabet('-alphabet' => $alphabet,
+					  '-poa'      => $self->poa);
+   return $a->get_activated_object_reference;
 }
 
 1;

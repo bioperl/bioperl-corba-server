@@ -50,7 +50,7 @@ or the web:
 =head1 AUTHOR - Ewan Birney, Jason Stajich
 
 Email birney@ebi.ac.uk
-      jason@chg.mc.duke.edu
+      jason@bioperl.org
 
 =head1 APPENDIX
 
@@ -64,13 +64,12 @@ The rest of the documentation details each of the object methods. Internal metho
 
 package Bio::CorbaServer::PrimarySeq;
 
-use vars qw(@ISA);
+use vars qw(@ISA $MAXSIZE);
 use strict;
 use Bio::CorbaServer::Base;
+$MAXSIZE = 10000;
 
-BEGIN { print STDERR "Accessing this module\n"; };
-
-@ISA = qw(Bio::CorbaServer::Base POA_bsane::seqcore::AnonymousSequence );
+@ISA = qw( POA_bsane::seqcore::AnonymousSequence Bio::CorbaServer::Base );
 
 sub new {
     my ($class, @args) = @_;
@@ -129,7 +128,7 @@ sub is_circular {
     if( defined $value ) {
 	$self->{'_circular'} = $value;
     }
-    return $self->{'_circular'} ? 1 : 0;
+    return defined $self->{'_circular'} && $self->{'_circular'} ? 1 : 0;
 }
 
 
@@ -148,7 +147,6 @@ sub get_length {
     return $self->_seq->length();
 }
 
-
 =head2 seq
 
  Title   : seq
@@ -162,6 +160,7 @@ sub get_length {
 sub seq {
     my $self = shift;
     my $seqstr = $self->_seq->seq;
+
     return $seqstr;
 }
 
@@ -180,24 +179,23 @@ sub sub_seq {
     if( !defined $end || !defined $start || ($end < $start) ) {
 	$start = '' if( !defined $start);
 	$end = '' if( !defined $end);
-	throw org::biocorba::seqcore::OutOfRange
-	    (reason=>"start is not before end ($start,$end");
+	throw bsane::OutOfBounds
+	    (reason=>"start is not before end ($start,$end)");
     } elsif( ($end - $start ) > $self->max_request_length ) {
-	throw org::biocorba::seqcore::RequestTooLarge
+	throw bsane::RequestTooLarge
 	    (reason=> ($end-$start) . " is larger than max request length", 
 	     suggested_size=>$self->max_request_length);
     } 
 
-    my $ret;
+    my $seqstr;
     eval {
-	$ret = $self->_seq->subseq($start,$end);
+	$seqstr = $self->_seq->subseq($start,$end);
     };
-    if( $@ ) {
-	#set exception
-	throw org::biocorba::seqcore::RequestTooLarge(reason=>"parameters $start, $end were too large");
-    } else {
-	return $ret;
-    }
+    if( $@ ) {	
+	throw bsane::OutOfRange(reason=>$@);
+    } 
+    
+    return $seqstr;
 }
 
 =head1 Private Methods
