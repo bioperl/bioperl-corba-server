@@ -122,7 +122,7 @@ sub next {
     
     my $item = $self->_elements->[$self->{'_pointer'}];
     $self->{'_pointer'}++;
-    return (defined $item, $item);#->get_activated_object_reference();
+    return (defined $item, $item);
 }
 
 =head2 next_n
@@ -141,16 +141,17 @@ sub next_n{
 
     # check to be sure we still have items to return
     if (! $self->has_more()) {
-	return (0,undef);
+	return (0,[]);
     }
-   my @items;
+   my @out = ();
+   
    while( $n > 0 && $self->has_more() ) {
        my $item = $self->_elements->[$self->{'_pointer'}];
        $self->{'_pointer'}++;
+       push @out, $item;
        $n--;
-       push @items, $item;
    }
-   return (scalar @items, \@items );
+   return (scalar @out > 0 , \@out);
 
 }
 
