@@ -221,15 +221,13 @@ sub get_locations {
     my $location = $self->_seqf->location();
 
     if( !defined $location ) {
-	throw bsnae::seqcore::UnableToProcess(reason=>'Location object does not exist for contained seqfeature');
+	throw bsane::seqcore::UnableToProcess(reason=>'Location object does not exist for contained seqfeature');
     } 
 
     # recursively build the locations in case they are SplitLocations
     my @locations = &create_BSANE_location_from_Bioperl_location($location);
     
-    my $ref = [];
-    push(@$ref,@locations);
-	
+    my $ref = [ @locations ];
     return $ref;
 }
 
