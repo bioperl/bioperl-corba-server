@@ -1,6 +1,5 @@
 #!/usr/local/bin/perl
 
-use Bio::CorbaServer::PrimarySeqDB;
 use Bio::CorbaServer::SeqDB;
 use strict;
 
@@ -19,7 +18,7 @@ $ind = undef;
 
 # lets go CORBA-ing
 
-use CORBA::ORBit idl => [ 'biocorba.idl' ];
+use CORBA::ORBit idl => [ 'idl/biocorba.idl' ];
 
 #build the actual orb and get the first POA (Portable Object Adaptor)
 my $orb = CORBA::ORB_init("orbit-local-orb");
@@ -32,9 +31,8 @@ my $seqdb = Bio::Index::Fasta->new(-filename => $tst_index_file,
 				   -verbose => 1);
 
 my $servant = Bio::CorbaServer::SeqDB->new('-poa'        => $root_poa,
-					   '-name'       => 'test_db', 
 					   '-seqdb'      => $seqdb, 
-					   '-no_destroy' => 1);
+					   );
 
 # this registers this object as a live object with the ORB
 my $id = $root_poa->activate_object ($servant);
