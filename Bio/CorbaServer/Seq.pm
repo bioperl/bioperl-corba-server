@@ -37,8 +37,8 @@ and other Bioperl modules. Send your comments and suggestions preferably
  to one of the Bioperl mailing lists.
 Your participation is much appreciated.
 
-  vsns-bcd-perl@lists.uni-bielefeld.de          - General discussion
-  vsns-bcd-perl-guts@lists.uni-bielefeld.de     - Technically-oriented discussion
+  bioperl-l@bio.perl.org          - General discussion
+  bioperl-guts-l@bio.perl.org     - Technically-oriented discussion
   http://bio.perl.org/MailList.html             - About the mailing lists
 
 =head2 Reporting Bugs
@@ -72,8 +72,11 @@ use strict;
 
 
 use Bio::CorbaServer::Base;
+use Bio::CorbaServer::PrimarySeq;
+use Bio::CorbaServer::SeqFeature;
+use Bio::CorbaServer::SeqFeatureIterator;
 
-@ISA = qw(Bio::CorbaServer::Base POA_org::Biocorba::Seqcore::Seq);
+@ISA = qw(Bio::CorbaServer::Base Bio::CorbServer::PrimarySeq);
 
 sub new {
     my $class = shift;
@@ -95,7 +98,6 @@ sub new {
 These functions are here because Seq inheriets from PrimarySeq
 object
 
-
 =head2 length
 
  Title   : length
@@ -104,13 +106,6 @@ object
  Example :
  Returns : length of sequence
  Args    :
-
-=cut
-
-sub length {
-    my $self = shift;
-    return $self->seq->length;
-}
 
 =head2 get_seq
 
@@ -121,15 +116,6 @@ sub length {
  Returns : sequence string
  Args    :
 
-
-=cut
-
-sub get_seq {
-    my $self = shift;
-    my $seqstr = $self->seq->seq;
-    return $seqstr;
-}
-
 =head2 get_subseq 
 
  Title   : sub_sequence 
@@ -139,28 +125,6 @@ sub get_seq {
  Returns : a substring of the sequence string
  Args    :
 
-=cut
-
-sub get_subseq {
-    my $self = shift;
-    my $s = shift;
-    my $e = shift;
-    if( !defined $e ) {
-	die "Someone managed to call get_subseq with no end";
-    }
-
-    my $ret;
-    eval {
-	$self->seq->subseq($s,$e);
-    };
-    if( $@ ) {
-	#set exception
-    } else {
-	return $ret;
-    }
-
-}
-
 =head2 display_id 
 
  Title   : display_id 
@@ -169,13 +133,6 @@ sub get_subseq {
  Example :
  Returns : display_id of sequence
  Args    :
-
-=cut
-
-sub display_id {
-    my $self = shift;
-    return $self->seq->display_id();
-}
 
 =head2 accession_number
 
@@ -202,12 +159,6 @@ sub accession_number {
  Returns : primary id of sequence
  Args    :
 
-=cut
-
-sub primary_id {
-    my $self = shift;
-    return $self->seq->primary_id();
-}
 
 =head2 max_request_length
 
@@ -219,11 +170,6 @@ sub primary_id {
  Args    :
 
 =cut
-
-sub max_request_length {
-    my $self = shift;
-    return 100000;
-}
 
 =head1 Seq functions
 
@@ -261,7 +207,7 @@ sub all_features_iterator {
     my $self = shift;
     my @corbarefs = $self->all_features;
 
-    return Bio::CorbaServer::SeqFeatureIterator->new($self->poa,\@corbarefs);
+    return [ Bio::CorbaServer::SeqFeatureIterator->new($self->poa,\@corbarefs) ];
 }
 
 =head2 features_region
@@ -305,6 +251,7 @@ sub features_region_iterator {
 
 =cut
 
+# this should be determined at some point
 sub max_feature_request {
     return 100000;
 }
