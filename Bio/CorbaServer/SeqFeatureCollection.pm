@@ -69,11 +69,11 @@ use strict;
 
 use Bio::CorbaServer::Base;
 use Bio::CorbaServer::Iterator;
-use Bio::CorbaServer::Utils;
+use Bio::CorbaServer::Utils qw(create_BSANE_location_from_Bioperl_location 
+			       create_Bioperl_location_from_BSANE_location);
 use Bio::CorbaServer::SeqFeature;
 
-@ISA = qw( Bio::CorbaServer::Base POA_bsane::seqcore::SeqFeatureCollection  );
-# new() can be inherited from Bio::Root::RootI
+@ISA = qw( POA_bsane::seqcore::SeqFeatureCollection Bio::CorbaServer::Base   );
 
 sub new {
     my ($class, @args) = @_;
@@ -166,11 +166,11 @@ sub get_annotations {
 sub get_features_on_region {
    my ($self,$how_many, $seq_region, $the_rest) = @_;
    if( ! $seq_region || ! ref($seq_region) ) {
-       throw bsane::UnableToProcess
+       throw bsane::SeqFeatureLocationOutOfBounds
 	   ( reason => ref($self). " get_features_on_region got invalid seq_region parameter (".ref($seq_region).")");	
    }
    my $seq = $self->_seq;
-   my $seq_region_location = &create_location_from_BSANE_Location($seq_region); 
+   my $seq_region_location = &create_Bioperl_location_from_BSANE_location($seq_region); 
    if( $seq->length < $seq_region_location->start ||
        $seq_region_location->end ) {
        throw bsane::seqcore::SeqFeatureLocationOutOfBounds
@@ -217,15 +217,19 @@ sub get_features_on_region {
 sub num_features_on_region { 
     my ($self, $seq_region) = @_;
    my $seq = $self->_seq;
-   my $seq_region_location = &create_location_from_BSANE_Location($seq_region); 
+    
+   my $seq_region_location = &create_Bioperl_location_from_BSANE_location($seq_region); 
+    
    if( $seq->length < $seq_region_location->start ||
-       $seq_region_location->end ) {
-       throw bsane::seqcore::SeqFeatureLocationOutOfBounds
+       $seq->length < $seq_region_location->end ) {
+       
+      throw bsane::seqcore::SeqFeatureLocationOutOfBounds
 	   (
-	    $seq_region,
-	    &create_BSANE_location_from_Bioperl_location(new Bio::Location::Simple('-start' => 1, '-end' => $seq->length, '-strand' => 0 ) )
+	    'invalid' => $seq_region,
+	    'valid'   => &create_BSANE_location_from_Bioperl_location(new Bio::Location::Simple('-start' => 1, '-end' => $seq->length, '-strand' => 0 ) )
 	    );
    }
+
     my $count = 0;
     foreach my $feature ( $seq->top_SeqFeatures() ) {
 	$count++ if( $feature->overlaps( $seq_region_location ));
