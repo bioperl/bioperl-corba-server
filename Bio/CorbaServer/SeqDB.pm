@@ -98,6 +98,7 @@ The rest of the documentation details each of the object methods. Internal metho
 package Bio::CorbaServer::SeqDB;
 use vars qw(@ISA);
 use strict;
+use Error;
 
 # Object preamble - inherits from Bio::CorbaServer::Base
 use Bio::CorbaServer::Base;
@@ -105,7 +106,7 @@ use Bio::CorbaServer::Seq;
 use Bio::CorbaServer::SeqIterator;
 
 @ISA = qw(POA_bsane::collection::BioSequenceCollection 
-	Bio::CorbaServer::Base );
+	  Bio::CorbaServer::Base );
 
 sub new {
     my ($class, @args) = @_;
@@ -136,13 +137,21 @@ sub new {
 
 sub resolve{
    my ($self,$id) = @_;
-   my $seq = $self->_seqdb->get_Seq_by_acc($id);
-   if( ! $seq ) { 
-       $seq = $self->_seqdb->get_Seq_by_id($id)
+   
+   my $seq;
+   eval { 
+       $seq = $self->_seqdb->get_Seq_by_id($id);
+       if( ! $seq ) { 
+	   $seq = $self->_seqdb->get_Seq_by_acc($id);
+       }
+
+   }; 
+   if( $@  || ! defined $seq ) {
+       print STDERR $@;
+       throw bsane::IdentifierDoesNotExist('id' => $id);
    }
-   if( ! $seq ) {
-       throw bsane::IdentifierDoesNotExist('id' => $id); 
-   }
+
+
    my $seqobj = new Bio::CorbaServer::Seq('-seq' => $seq,
 					  '-poa' => $self->poa);
    return $seqobj->get_activated_object_reference();
