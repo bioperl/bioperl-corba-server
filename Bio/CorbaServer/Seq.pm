@@ -121,13 +121,15 @@ sub all_SeqFeatures {
 
 sub get_SeqFeatures_by_type {
     my ($self,$recurse,$type) = @_;
-    my $feats = $self->all_SeqFeatures($recurse);
-    my $iter = $feats->iterator();
-    my @feats_to_ret;
-    while( $iter->has_more ) {
-	my $sf = $iter->next;
-	if( $sf->type =~ /$type/i ) {
-	    push @feats_to_ret,$sf;
+    my (@sf,@feats_to_ret);
+    if( $recurse ) {
+	@sf = $self->_seq->all_SeqFeatures();
+    } else { 
+	@sf = $self->_seq->top_SeqFeatures();
+    }
+    foreach my $feat ( @sf ) {
+	if( $feat->primary_tag =~ /$type/i ) {
+	    push @feats_to_ret,$feat;
 	}
     }
     my $s = new Bio::CorbaServer::SeqFeatureVector('-poa'   => $self->poa,
@@ -149,24 +151,27 @@ sub get_SeqFeatures_by_type {
 
 sub get_SeqFeatures_in_region {
     my ($self, $start,$end,$recurse) = @_;
-    my $feats = $self->all_SeqFeatures($recurse);
-    my $iter = $feats->iterator();
     if( $start > $self->length || $start <= 0 || 
 	$end > $self->length || $end <= 0 || 
 	$end < $start) {
-	throw  org::biocorba::seqcore::UnableToProcess (reason=>"requested region ($start..$end) is not valid for this seq (1..". $self->length.").");	
-    } 
+	throw  org::biocorba::seqcore::OutOfRange (reason=>"requested region ($start..$end) is not valid for this seq (1..". $self->length.").");	
+    }
+    my (@sf,@feats_to_ret);
+    if( $recurse ) {
+	@sf = $self->_seq->all_SeqFeatures();
+    } else { 
+	@sf = $self->_seq->top_SeqFeatures();
+    }
     my $range = new Bio::Range(-start => $start,
 			       -end   => $end);
-    my @feats_to_ret;
-    while( $iter->has_more ) {
-	my $sf = $iter->next;
-	if( $range->contains($sf) ) {
-	    push @feats_to_ret,$sf;
+    
+    foreach my $feat ( @sf ) {
+	if( $range->contains($feat) ) {
+	    push @feats_to_ret,$feat;
 	}
     }
     my $s = new Bio::CorbaServer::SeqFeatureVector('-poa'   => $self->poa,
-						   '-items' => \@feats_to_ret);
+						  '-items' => \@feats_to_ret);
     return $s->get_activated_object_reference();
 }
 
@@ -185,28 +190,29 @@ sub get_SeqFeatures_in_region {
 
 sub get_SeqFeatures_in_region_by_type {
     my ($self, $start,$end,$recurse,$type) = @_;
-    my $feats = $self->all_SeqFeatures($recurse);
-    my $iter = $feats->iterator();
-    my @feats_to_ret;
     if( $start > $self->length || $start <= 0 || 
 	$end > $self->length || $end <= 0 || 
 	$end < $start) {
-	throw  org::biocorba::seqcore::UnableToProcess (reason=>"requested region ($start..$end) is not valid for this seq (1..". $self->length.").");	
-    } 
-
+	throw  org::biocorba::seqcore::OutOfRange (reason=>"requested region ($start..$end) is not valid for this seq (1..". $self->length.").");	
+    }
+    my (@sf,@feats_to_ret);
+    if( $recurse ) {
+	@sf = $self->_seq->all_SeqFeatures();
+    } else { 
+	@sf = $self->_seq->top_SeqFeatures();
+    }
     my $range = new Bio::Range(-start => $start,
 			       -end   => $end);
-			       
-    while( $iter->has_more ) {
-	my $sf = $iter->next;
-	if( $range->contains($sf) && 
-	    $sf->type =~ /$type/i ) {
-	    push @feats_to_ret,$sf;
+
+    foreach my $feat ( @sf ) {
+	if( $range->contains($feat) && $feat->primary_tag =~ /$type/i ) {
+	    push @feats_to_ret,$feat;
 	}
     }
-    my $s= new Bio::CorbaServer::SeqFeatureVector('-poa'   => $self->poa,
-						  '-items' => \@feats_to_ret);
+    my $s = new Bio::CorbaServer::SeqFeatureVector('-poa'   => $self->poa,
+						   '-items' => \@feats_to_ret);
     return $s->get_activated_object_reference();
+
 }
 
 =head2 get_PrimarySeq

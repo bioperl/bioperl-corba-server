@@ -66,28 +66,12 @@ use vars qw($AUTOLOAD @ISA);
 use strict;
 use Bio::Range;
 
-use Bio::CorbaServer::Base;
+use Bio::CorbaServer::AnonymousSeq;
 
-@ISA = qw(POA_org::biocorba::seqcore::PrimarySeq Bio::CorbaServer::Base );
-
-sub new {
-    my ($class, @args) = @_;
-    my $self = $class->SUPER::new(@args);
-    my ($seq) = $self->_rearrange([qw(SEQ)],@args);
-
-    if( ! defined $seq || !ref $seq || ! $seq->isa('Bio::PrimarySeqI') ) {
-	$seq = '' if( !defined $seq );
-	throw org::biocorba::seqcore::UnableToProcess 
-	    (reason=>$class ." got a non sequence [$seq] for server object");
-    }
-    $self->_seq($seq);
-    $self->is_circular(0);
-    return $self;
-}
+@ISA = qw(POA_org::biocorba::seqcore::PrimarySeq 
+	Bio::CorbaServer::AnonymousSeq );
 
 =head1 AnonymousSeq Methods
-
-Implemented AnonymousSeq Methods
 
 =head2 type
 
@@ -100,20 +84,6 @@ Implemented AnonymousSeq Methods
 
 =cut
 
-sub type {
-    my $self = shift;
-    my $moltype = uc $self->_seq->moltype;
-    if(  $moltype eq 'DNA' ) {
-	return 1;
-    } elsif ( $moltype eq 'RNA' ) {
-	return 2;
-    } elsif ( $moltype =~ /PROT/i ) {
-	return 0;
-    } else { 
-	return -1;
-    }
-}
-
 =head2 is_circular
 
  Title   : is_circular
@@ -125,15 +95,6 @@ sub type {
 
 =cut
 
-sub is_circular {
-    my ($self,$value) = @_;
-    if( defined $value ) {
-	$self->{'_circular'} = $value;
-    }
-    return $self->{'_circular'} ? 1 : 0;
-}
-
-
 =head2 length
 
  Title   : length
@@ -143,12 +104,6 @@ sub is_circular {
  Args    : none
 
 =cut
-
-sub length {
-    my $self = shift;
-    return $self->_seq->length();
-}
-
 
 =head2 seq
 
@@ -160,12 +115,6 @@ sub length {
 
 =cut
 
-sub seq {
-    my $self = shift;
-    my $seqstr = $self->_seq->seq;
-    return $seqstr;
-}
-
 =head2 subseq
 
  Title   : subseq
@@ -176,31 +125,9 @@ sub seq {
            end   - end point of substring to obtain
 =cut
 
-sub subseq {
-    my ($self,$start,$end) = @_;
-    if( !defined $end || !defined $start || ($end < $start) ) {
-	$start = '' if( !defined $start);
-	$end = '' if( !defined $end);
-	throw org::biocorba::seqcore::OutOfRange
-	    (reason=>"start is not before end ($start,$end");
-    } elsif( ($end - $start ) > $self->max_request_length ) {
-	throw org::biocorba::seqcore::RequestTooLarge
-	    (reason=> ($end-$start) . " is larger than max request length", 
-	     suggested_size=>$self->max_request_length);
-    } 
+=head1 PrimarySeq Methods
 
-    my $ret;
-    eval {
-	$ret = $self->_seq->subseq($start,$end);
-    };
-    if( $@ ) {
-	#set exception
-	throw org::biocorba::seqcore::RequestTooLarge(reason=>"parameters $start, $end were too large", suggested_size=>0);
-    } else {
-	return $ret;
-    }
-}
-
+PrimarySeq interface methods implemented
 
 =head2 version
 
@@ -216,10 +143,6 @@ sub version {
     my ($self) = @_;    
     return $self->_version;
 }
-
-=head1 PrimarySeq Methods
-
-PrimarySeq interface methods implemented
 
 =head2 display_id
 
