@@ -1,6 +1,6 @@
 
 #
-# BioPerl module for Bio::CorbaServer::PrimarySeq
+# BioPerl module for Bio::CorbaServer::BioEnv
 #
 # Cared for by Ewan Birney <birney@ebi.ac.uk>
 #
@@ -12,7 +12,7 @@
 
 =head1 NAME
 
-Bio::CorbaServer::PrimarySeq - PrimarySeq server bindings
+Bio::CorbaServer::BioEnv - DESCRIPTION of Object
 
 =head1 SYNOPSIS
 
@@ -20,9 +20,7 @@ Give standard usage here
 
 =head1 DESCRIPTION
 
-This object represents the binding of the Primary Sequence
-object in Bioperl to the BioCorba object. This is pretty
-simple as the objects are almost identical
+Describe the object here
 
 =head1 FEEDBACK
 
@@ -50,6 +48,7 @@ Report bugs to the Bioperl bug tracking system to help us keep track
 
 Email birney@ebi.ac.uk
 
+Describe contact details here
 
 =head1 APPENDIX
 
@@ -61,87 +60,64 @@ The rest of the documentation details each of the object methods. Internal metho
 # Let the code begin...
 
 
-package Bio::CorbaServer::PrimarySeq;
-
+package Bio::CorbaServer::BioEnv;
 use vars qw($AUTOLOAD @ISA);
 use strict;
 
 # Object preamble - inherits from Bio::Root::Object
 
 
+use Bio::SeqIO;
+use Bio::CorbaServer::PrimarySeq;
 
+@ISA = qw(POA_org::Biocorba::Seqcore::BioEnv);
 
-@ISA = qw(POA_org::Biocorba::Seqcore::PrimarySeq);
 
 sub new {
     my $class = shift;
-    my $seq = shift;
-
-    if( ! defined $seq || !ref $seq || !$seq->isa('Bio::PrimarySeqI') ) {
-	die "In CorbaServer PrimarySeq, got a non sequence [$seq] for server object";
-    }
-
-    
+    my $poa = shift;
     my $self = {};
-    $self->{'seqobj'} = $seq;
-    $self->{'ref_count'} = 1;
+    $self->{'root_poa'} = $poa;
     bless $self,$class;
     return $self;
 }
 
-sub length {
+sub PrimarySeq_from_file {
     my $self = shift;
-    return $self->{'seqobj'}->length;
-}
+    my $format = shift;
+    my $file = shift;
 
-sub get_seq {
-    my $self = shift;
-    my $seqstr = $self->{'seqobj'}->seq;
-    return $seqstr;
-}
+    print STDERR "Got [$self][$format][$file]\n";
+    my $seq;
 
-sub get_subseq {
-    my $self = shift;
-    my $s = shift;
-    my $e = shift;
-    if( !defined $e ) {
-	die "Someone managed to call get_subseq with no end";
-    }
 
-    my $ret;
     eval {
-	$self->{'seqobj'}->subseq($s,$e);
+	my $seqio;
+	if( $format !~ /\w/ ) {
+	    $seqio = Bio::SeqIO->new(-file => $file);
+	} else {
+	    $seqio = Bio::SeqIO->new(-format => $format,-file => $file);
+	} 
+	$seq = $seqio->next_primary_seq();
     };
+
     if( $@ ) {
-	#set exception
+	print STDERR "Got exception $@\n";
+	# set exception
     } else {
-	return $ret;
+	my $servant = Bio::CorbaServer::PrimarySeq->new($seq);
+	print STDERR "Got a $servant... about to activate...\n";
+
+	my $id = $self->{'root_poa'}->activate_object ($servant);
+	# seg faults if I don't touch id. Yikes
+	#my $other = $id;
+        #print STDERR "Got id $id - $other\n";
+	my $temp = $self->{'root_poa'}->id_to_reference ($id);
+
+	print STDERR "About to return servant\n";
+
+	return $temp;
     }
 
+    die ("should never have got here!");
 }
-
-sub display_id {
-    my $self = shift;
-    return $self->{'seqobj'}->display_id();
-}
-
-sub accession_number {
-    my $self = shift;
-    return $self->{'seqobj'}->accession_number();
-}
-
-sub primary_id {
-    my $self = shift;
-    return $self->{'seqobj'}->primary_id();
-}
-
-sub max_request_length {
-    my $self = shift;
-    return 100000;
-}
-
-1;
-
-
-	    
-
