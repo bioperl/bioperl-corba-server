@@ -117,7 +117,7 @@ sub next {
 
     # check to be sure we still have items to return
     if (! $self->has_more()) {
-	return (0,undef);
+	return (0,[]);
     }
     
     my $item = $self->_elements->[$self->{'_pointer'}];
