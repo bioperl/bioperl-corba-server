@@ -33,8 +33,10 @@ User feedback is an integral part of the evolution of this and other
 Bioperl modules. Send your comments and suggestions preferably to one
 of the Bioperl mailing lists.  Your participation is much appreciated.
 
-  bioperl-l@bio.perl.org          - General discussion
-  http://bio.perl.org/MailList.html             - About the mailing lists
+  bioperl-l@bioperl.org                 - BioPerl discussion
+  biocorba-l@biocorba.org               - BioCorba discussion
+  http://www.bioperl.org/MailList.html  - About the BioPerl mailing list
+  http://www.biocorba.org/MailList.html - About the BioCorba mailing list
 
 =head2 Reporting Bugs
 
@@ -192,7 +194,7 @@ sub primary_id {
     if( $str =~ /hash\((0x[0-9a-f]+)\)/i ) {
 	$str = $1;
     } 
-    return hex($str);
+    return "bioperlid:".hex($str);
 }
 
 =head1 Private Methods
@@ -243,24 +245,5 @@ sub _version {
     }    
     return $self->{'_version'};
 }
-
-=head2 max_request_length
-
- Title   : max_request_length
- Usage   :
- Function:
- Example :
- Returns : 
- Args    :
-
-
-=cut
-
-sub max_request_length{
-   my ($self,@args) = @_;
-
-   return 10000;
-}
-
 
 1;

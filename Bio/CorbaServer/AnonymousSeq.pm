@@ -33,8 +33,10 @@ User feedback is an integral part of the evolution of this and other
 Bioperl modules. Send your comments and suggestions preferably to one
 of the Bioperl mailing lists.  Your participation is much appreciated.
 
-  bioperl-l@bio.perl.org          - General discussion
-  http://bio.perl.org/MailList.html             - About the mailing lists
+  bioperl-l@bioperl.org                 - BioPerl discussion
+  biocorba-l@biocorba.org               - BioCorba discussion
+  http://www.bioperl.org/MailList.html  - About the BioPerl mailing list
+  http://www.biocorba.org/MailList.html - About the BioCorba mailing list
 
 =head2 Reporting Bugs
 
@@ -56,7 +58,6 @@ The rest of the documentation details each of the object methods. Internal metho
 
 =cut
 
-
 # Let the code begin...
 
 package Bio::CorbaServer::AnonymousSeq;
@@ -66,7 +67,7 @@ use strict;
 
 use Bio::CorbaServer::Base;
 
-@ISA = qw(POA_org::biocorba::seqcore::AnonymousSeq Bio::CorbaServer::Base );
+@ISA = qw( POA_org::biocorba::seqcore::AnonymousSeq Bio::CorbaServer::Base );
 
 sub new {
     my ($class, @args) = @_;
@@ -78,7 +79,7 @@ sub new {
 	$self->throw($class ." got a non sequence [$seq] for server object");
     }
     $self->_seq($seq);
-    $self->is_circular(0);
+    $self->is_circular(0);  
     return $self;
 }
 
@@ -217,6 +218,24 @@ sub _seq {
 	$self->{'_seqobj'} = $value;
     }
     return $self->{'_seqobj'};
+}
+
+=head2 max_request_length
+
+ Title   : max_request_length
+ Usage   :
+ Function:
+ Example :
+ Returns : 
+ Args    :
+
+
+=cut
+
+sub max_request_length{
+   my ($self,@args) = @_;
+
+   return 100000;
 }
 
 1;

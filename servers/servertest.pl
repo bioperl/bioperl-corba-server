@@ -8,6 +8,7 @@ use Bio::Index::Fasta;
 my $dir = `pwd`;
 chomp($dir);
 my $tst_index_file = "$dir/t/testIndex.dbm";
+unlink($tst_index_file);
 my $ind = Bio::Index::Fasta->new(-filename => $tst_index_file, 
 				 -write_flag => 1, 
 				 -verbose => 1);

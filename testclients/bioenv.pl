@@ -1,13 +1,10 @@
 #!/usr/local/bin/perl -w
-
+use strict;
 #$file = shift;
 foreach $a (@ARGV) {
     print STDERR "Got argument $a\n";
 }
-
-if( ! defined $file ) {
-    $file ="t/test_seq.fasta";
-}
+my $file = "t/test_seq.fasta";
 
 use CORBA::ORBit idl => [ 'biocorba.idl' ];
 
@@ -15,22 +12,24 @@ if ( ! defined $file ) {
     die"Must supply bioenv.pl filename (fasta file)\n";
 }
 
-$ior_file = "bioenv.ior";
+my $ior_file = "bioenv.ior";
 print STDERR "Got file $ior_file\n";
 print STDERR "Got input $file\n";
 
-$orb = CORBA::ORB_init("orbit-local-orb");
+my $orb = CORBA::ORB_init("orbit-local-orb");
 
 open(F,"$ior_file") || die "Could not open $ior_file";
-$ior = <F>;
+my $ior = <F>;
 chomp $ior;
 close(F);
 
-$bioenv = $orb->string_to_object($ior);
+my $bioenv = $orb->string_to_object($ior);
 print STDERR "Giving fasta [$file]\n";
 
-$seq = $bioenv->get_PrimarySeq_from_file('fasta',$file);
+my $seq = $bioenv->get_PrimarySeq_from_file('fasta',$file);
 
 print "sequence name is ",$seq->display_id,"\n";
-print "  seq is",$seq->seq(),"\n";
+print "  seq is";
+print $seq->seq(),"\n";
+
 

@@ -16,24 +16,43 @@ Bio::CorbaServer::PrimarySeqDB - Database of PrimarySeqs
 
 =head1 SYNOPSIS
 
-Give standard usage here
+    # get a Bio::CorbaServer::PrimaryDB from a corbaserver
+    my $dbname = $db->name;
+    my $version = $db->version;
+    my $maxseqlen = $db->max_sequence_length();
+    try { 
+	my $seq = $db->get_PrimarySeq('AC002010', 1);
+    } catch org::biocorba::seqcore::UnableToProcess with { 
+	my $e = shift;
+	print STDERR "trouble processing accession 'AC002010.1', error was : ",
+	$e->{reason}, "\n";
+    }
+    my $pseqvec = $db->get_PrimarySeqVector;
+    my $iter = $pseqvec->iterator();
+    while( $iter->has_more() ) {
+	my $seq = $iter->next();
+	print "seq is ", $seq->display_id(), "\n";
+    }
+
 
 =head1 DESCRIPTION
 
-Describe the object here
+This object handles represenatation of PrimarySequence Database.  It
+has a reference to a Bio::DB::SeqI and maps biocorba methods to the
+Bio::DB::SeqI object.
 
 =head1 FEEDBACK
 
 =head2 Mailing Lists
 
-User feedback is an integral part of the evolution of this
-and other Bioperl modules. Send your comments and suggestions preferably
- to one of the Bioperl mailing lists.
-Your participation is much appreciated.
+User feedback is an integral part of the evolution of this and other
+Bioperl modules. Send your comments and suggestions preferably to one
+of the Bioperl mailing lists.  Your participation is much appreciated.
 
-  bioperl-l@bio.perl.org          - General discussion
-  bioperl-guts-l@bio.perl.org     - Technically-oriented discussion
-  http://bio.perl.org/MailList.html             - About the mailing lists
+  bioperl-l@bioperl.org                 - BioPerl discussion
+  biocorba-l@biocorba.org               - BioCorba discussion
+  http://www.bioperl.org/MailList.html  - About the BioPerl mailing list
+  http://www.biocorba.org/MailList.html - About the BioCorba mailing list
 
 =head2 Reporting Bugs
 

@@ -12,7 +12,8 @@
 
 =head1 NAME
 
-Bio::CorbaServer::Base - BioCorba Base Object, all BioCorba object inherit and are created from it.
+Bio::CorbaServer::Base - BioCorba Base Object, all BioCorba object
+inherit and are created from it.
 
 =head1 SYNOPSIS
 
@@ -34,8 +35,10 @@ User feedback is an integral part of the evolution of this and other
 Bioperl modules. Send your comments and suggestions preferably to one
 of the Bioperl mailing lists.  Your participation is much appreciated.
 
-  bioperl-l@bio.perl.org            - General discussion
-  http://bio.perl.org/MailList.html - About the mailing lists
+  bioperl-l@bioperl.org                 - BioPerl discussion
+  biocorba-l@biocorba.org               - BioCorba discussion
+  http://www.bioperl.org/MailList.html  - About the BioPerl mailing list
+  http://www.biocorba.org/MailList.html - About the BioCorba mailing list
 
 =head2 Reporting Bugs
 
@@ -67,13 +70,13 @@ use vars qw($AUTOLOAD @ISA);
 use strict;
 
 use Bio::Root::RootI;
+use CORBA::ORBit;
 
 @ISA = qw(Bio::Root::RootI);
 
 sub new {
     my ($class, @args) = @_;
-        my $self = $class->SUPER::new(@args);
-
+    my $self = $class->SUPER::new(@args);
     my ($poa, $no_destroy) = $self->_rearrange([qw(POA NO_DESTROY)], @args);
 
     $self->_no_destroy($no_destroy);
@@ -150,7 +153,10 @@ sub reference_count {
 
 =cut
 
-sub query_interface { return $_[0]; }
+sub query_interface {  
+    my ($self, $repoid) = @_;
+    return new CORBA::Object;
+}
 
 =head2 get_activated_object_reference
 
@@ -168,6 +174,7 @@ sub get_activated_object_reference {
     my $id = $self->poa->activate_object($self);	
     return $self->poa->id_to_reference($id);
 }
+
 sub _no_destroy {
     my($self,$value) = @_;
     if( defined $value || !defined $self->{'_no_destroy'}) {

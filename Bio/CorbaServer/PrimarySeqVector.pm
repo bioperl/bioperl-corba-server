@@ -32,11 +32,13 @@ User feedback is an integral part of the evolution of this and other
 Bioperl modules. Send your comments and suggestions preferably to one
 of the Bioperl mailing lists.  Your participation is much appreciated.
 
-  bioperl-l@bio.perl.org             - General discussion
-  http://bio.perl.org/MailList.html  - About the mailing lists
+  bioperl-l@bioperl.org                 - BioPerl discussion
+  biocorba-l@biocorba.org               - BioCorba discussion
+  http://www.bioperl.org/MailList.html  - About the BioPerl mailing list
+  http://www.biocorba.org/MailList.html - About the BioCorba mailing list
 
 =head2 Reporting Bugs
-]
+
 Report bugs to the Bioperl bug tracking system to help us keep track
 the bugs and their resolution.  Bug reports can be submitted via email
 or the web:

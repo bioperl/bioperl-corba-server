@@ -26,12 +26,15 @@ This object handles bootstrapping into the biocorba system
 
 =head2 Mailing Lists
 
+
 User feedback is an integral part of the evolution of this and other
 Bioperl modules. Send your comments and suggestions preferably to one
 of the Bioperl mailing lists.  Your participation is much appreciated.
 
-  bioperl-l@bio.perl.org            - General discussion
-  http://bio.perl.org/MailList.html - About the mailing lists
+  bioperl-l@bioperl.org                 - BioPerl discussion
+  biocorba-l@biocorba.org               - BioCorba discussion
+  http://www.bioperl.org/MailList.html  - About the BioPerl mailing list
+  http://www.biocorba.org/MailList.html - About the BioCorba mailing list
 
 =head2 Reporting Bugs
 
@@ -46,8 +49,6 @@ Report bugs to the Bioperl bug tracking system to help us keep track
 
 Email birney@ebi.ac.uk
       jason@chg.mc.duke.edu
-
-Describe contact details here
 
 =head1 APPENDIX
 
@@ -69,7 +70,7 @@ use Bio::CorbaServer::Base;
 use Bio::CorbaServer::PrimarySeqIterator;
 
 $DEBUG = 1;
-@ISA = qw( Bio::CorbaServer::Base POA_org::biocorba::seqcore::BioEnv);
+@ISA = qw( POA_org::biocorba::seqcore::BioEnv Bio::CorbaServer::Base);
 
 
 sub new {
@@ -105,6 +106,7 @@ sub get_PrimarySeq_from_file {
 	    $seqio = Bio::SeqIO->new(-format => $format,-file => $file);
 	} 
 	$seq = $seqio->next_primary_seq();
+	print "seq is ", $seq->display_id, " ", $seq->seq, "\n";
     };
 
     if( $@ ) {
@@ -116,7 +118,7 @@ sub get_PrimarySeq_from_file {
 	my $servant = Bio::CorbaServer::PrimarySeq->new('-poa' => $self->poa, 
 							'-seq' => $seq);
 
-	return $servant->get_activated_object_reference;
+	return $servant->get_activated_object_reference();
     }
     die ("should never have got here!");
 }
@@ -196,7 +198,6 @@ sub get_Seq_from_file {
 						 '-seq' => $seq);
 	return $servant->get_activated_object_reference;
     }
-
     die ("should never have got here!");
 }
 
@@ -213,7 +214,7 @@ sub get_Seq_from_file {
 
 sub get_SeqDB_names {
     my ($self ) = @_;
-    return keys %{$self->{'_seqdbs'}};
+    return [ keys %{$self->{'_seqdbs'}}];
 }
 
 =head2 get_SeqDB_versions
@@ -235,7 +236,7 @@ sub get_SeqDB_versions {
 	throw org::biocorba::seqcore::DoesNotExist 
 	    reason => "$dbname is not a known database name.";	
     }
-    return keys %{$seqdbhead};
+    return [keys %{$seqdbhead}];
 }
 
 =head2 get_SeqDB_by_name
@@ -249,7 +250,7 @@ sub get_SeqDB_versions {
 
 =cut
 
-sub get_SeqDB_versions {
+sub get_SeqDB_by_name {
     my ($self, $dbname,$version) = @_;
 
     my $seqdbhead = $self->{'_seqdbs'}->{$dbname};
@@ -262,7 +263,7 @@ sub get_SeqDB_versions {
 	throw org::biocorba::seqcore::DoesNotExist 
 	    reason => "$dbname ($version) is not a known database version.";	
     }
-    return $seqdb;
+    return $seqdb->get_activated_object_reference;
 }
 
 1;

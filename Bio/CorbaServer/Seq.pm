@@ -15,15 +15,14 @@
 Bio::CorbaServer::Seq - CORBA wrapper around a Seq Object
 
 =head1 SYNOPSIS
-
-  $seqio = Bio::SeqIO->new( -format => 'embl' , -file => 'some/file');
-  $seq   = $seqio->next_seq();
+    
+  my $seqio = Bio::SeqIO->new( -format => 'embl' , -file => 'some/file');
+  my $seq   = $seqio->next_seq();
 
   $corbaseq = Bio::CorbaServer::Seq->new($poa,$seq);
   $poa->activate_object($corbaseq);
    # ready to rock and roll.
-
-
+   
 =head1 DESCRIPTION
 
 This provides a CORBA wrapping over a Seq object
@@ -32,14 +31,14 @@ This provides a CORBA wrapping over a Seq object
 
 =head2 Mailing Lists
 
-User feedback is an integral part of the evolution of this
-and other Bioperl modules. Send your comments and suggestions preferably
- to one of the Bioperl mailing lists.
-Your participation is much appreciated.
+User feedback is an integral part of the evolution of this and other
+Bioperl modules. Send your comments and suggestions preferably to one
+of the Bioperl mailing lists.  Your participation is much appreciated.
 
-  bioperl-l@bio.perl.org          - General discussion
-  bioperl-guts-l@bio.perl.org     - Technically-oriented discussion
-  http://bio.perl.org/MailList.html             - About the mailing lists
+  bioperl-l@bioperl.org                 - BioPerl discussion
+  biocorba-l@biocorba.org               - BioCorba discussion
+  http://www.bioperl.org/MailList.html  - About the BioPerl mailing list
+  http://www.biocorba.org/MailList.html - About the BioCorba mailing list
 
 =head2 Reporting Bugs
 
@@ -104,7 +103,7 @@ sub all_SeqFeatures {
 	@sf = $self->_seq->top_SeqFeatures();
     }
     my $s = new Bio::CorbaServer::SeqFeatureVector('-poa'   => $self->poa,
-							 '-items' => \@sf);
+						   '-items' => \@sf);
     return $s->get_activated_object_reference();
 }
 

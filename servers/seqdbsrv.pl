@@ -1,14 +1,15 @@
-#!/usr/local/bin/perl 
+#!/usr/local/bin/perl
 
 use Bio::CorbaServer::PrimarySeqDB;
 use Bio::CorbaServer::SeqDB;
+use strict;
 
 # lets make the indexfile from the multifa.seq
 use Bio::Index::Fasta;
 my $dir = `pwd`;
 chomp($dir);
-unlink $tst_index_file;
 my $tst_index_file = "$dir/t/testIndex.dbm";
+unlink $tst_index_file;
 my $ind = Bio::Index::Fasta->new(-filename => $tst_index_file, 
 				 -write_flag => 1, 
 				 -verbose => 1);
@@ -21,20 +22,19 @@ $ind = undef;
 use CORBA::ORBit idl => [ 'biocorba.idl' ];
 
 #build the actual orb and get the first POA (Portable Object Adaptor)
-$orb = CORBA::ORB_init("orbit-local-orb");
-$root_poa = $orb->resolve_initial_references("RootPOA");
+my $orb = CORBA::ORB_init("orbit-local-orb");
+my $root_poa = $orb->resolve_initial_references("RootPOA");
 
 # make a Fast index object
 
 my $seqdb = Bio::Index::Fasta->new(-filename => $tst_index_file, 
-				 -write_flag => 0, 
-				 -verbose => 1);
+				   -write_flag => 0, 
+				   -verbose => 1);
 
-					
-$servant = Bio::CorbaServer::SeqDB->new('-poa'        => $root_poa,
-					'-name'       => 'test_db', 
-					'-seqdb'      => $seqdb, 
-					'-no_destroy' => 1);
+my $servant = Bio::CorbaServer::SeqDB->new('-poa'        => $root_poa,
+					   '-name'       => 'test_db', 
+					   '-seqdb'      => $seqdb, 
+					   '-no_destroy' => 1);
 
 # this registers this object as a live object with the ORB
 my $id = $root_poa->activate_object ($servant);
@@ -46,7 +46,7 @@ my $temp = $root_poa->id_to_reference ($id);
 my $ior = $orb->object_to_string ($temp);
 
 # write out the IOR. This is what we give to a different machine
-$ior_file = "seqdbsrv.ior";
+my $ior_file = "seqdbsrv.ior";
 open (OUT, ">$ior_file") || die "Cannot open file for ior: $!";
 print OUT "$ior";
 close OUT;
