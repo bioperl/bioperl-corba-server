@@ -1,251 +1,597 @@
+// Notes on the biocorba IDL. 
+//
+// This IDL is designed to be pretty uncontroversial and simple. It is
+// using very simple CORBA features, and contains no valuetypes or
+// any's, which are being implemented late in ORBs (if at all). This
+// IDL will work with ORBacus & JavaORB for Java, ORBit for perl.
+//
+// This IDL is designed for biological sequences and their
+// features. 
 
 
-// Notes on the IDL. 
-//
-// This IDL is designed to be pretty uncontroversial and simple. I am
-// using very simple CORBA features, and so no valuetypes, any's,
-// const's all of which get implemented late in ORBs (if at all).
-//
-// This IDL is designed only for sequences and features.  There is no
-// provision for other stuff - we need to start with the things we can
-// agree with and build on that.
-//
-// This IDL should work well as an internal IDL for an OMG compliant
-// server. The OMG specification leaves alot of the "magic" to the
-// server, including memory management etc, and also uses alot of
-// "standard" OMG types and services which generally do not come
-// with a standard free ORB. Hence the GNOME memory management
-// model and the simple iterators.
-//
-// <birney@ebi.ac.uk>
-//
-
-//
 // This comes directly from the GNOME bonoboo model.
 // It allows memory management via ref and unref calls.
 // The query_interface is not important for this case,
 // but here for completeness.
-//
-
 module GNOME {
-  interface Unknown {
+  interface Unknown 
+  {
     void ref();
     void unref();
     Object query_interface(in string repoid);
   };
 };
+ 
 
+// These are the biological objects that are defined:
+// 
+// 1) There are three levels of object describing biological
+// sequences: AnonymousSeq, PrimarySeq and Seq. 
 //
-// These are the actual biological objects that we are interested
-// in. Nearly everything is an interface. It is not going to work
-// well across large internet connections, so don't use it for that.
+// 2) Objects that describe the features and locations of features on
+// a biological sequence: SeqFeature and SeqFeatureLocation.
 //
+// 3) Vector and iterator objects that allow us to process lists of
+// biological objects easily and are designed for network access:
+// PrimarySeqIterator, PrimarySeqVector, SeqFeatureIterator,
+// SeqFeatureVector, SeqFeatureLocationVector,
+// SeqFeatureLocationIterator
+//
+// 4) There are three levels of objects describing biological
+// databases: PrimarySeqDB, SeqDB and UpdateableSeqDB. Each one
+// provides a richer level of functionality than its superclass.
+//
+// 5) A factory object that creates and makes avalaible biological
+// database objects: BioEnv.
+//
+// 6) A collection of Exceptions for when error conditions occur.
 
-// The org.Biocorba.Seqcore package is so we look good in Java.
+// The org.biocorba.seqcore package is so we look good in Java.
 // Makes the C interface names waaaaay too long of course
 
 module org {
-  module Biocorba  {
-    module Seqcore 
-      // changed indentation to give us more space for the main text
-{
+  module biocorba {
+    module seqcore 
+    {
+      // *** EXCEPTIONS ***
 
-  exception RequestTooLarge { string reason; 
-  long suggested_size; }; 
-  // means you need to request a smaller number,
-  // ie, request only failed due to its size.
-  
-  exception OutOfRange { string reason; };      // For when start/end points are out of range.
-  exception EndOfStream { };                    // for end of streams
-  exception UnableToProcess { string reason; }; // All other errors
-  exception NeedsUpdate { string description; };
-  exception DoesNotExist { string description; };
-  
-  enum SeqType { PROTEIN,DNA,RNA };
-  
-  // AnonymousSeq is just the sequence informaiton and *nothing else*
-  // including names
-  
-  interface AnonymousSeq : GNOME::Unknown {
-    SeqType type(); // server has to at least *guess* the type.
-    long    length();
-    
-    // the entire sequence. Use max_request_length to find the max
-    // size allowed
-    string  get_seq() raises (RequestTooLarge);
-    
-    // gets a sub sequence. the start,end are in biological
-    // coordinates, ie, 1-2 are the first two bases
-    string  get_subseq(in long start,in long end) raises (OutOfRange,
-							  RequestTooLarge);
-    // This is to find the largest string that can be passed back
-    long    max_request_length(); 
+      // Exception thrown when the size of the object requested is
+      // larger than the server will allow.
+      exception RequestTooLarge { string reason; long suggested_size; }; 
+
+      // Exception thrown when values specified are outside of the
+      // allowed range.
+      exception OutOfRange { string reason; };
+
+      // Exception thrown when the method has reached the end of a
+      // stream.
+      exception EndOfStream { };                   
+
+      // Exception thrown when the object needs to be updated.
+      exception NeedsUpdate { string reason; };
+
+      //Exception thrown when the requested ID does not exist in a
+      //database.
+      exception DoesNotExist { string reason; };
+
+      // A general exception thrown for other error conditions.
+      exception UnableToProcess { string reason; }; 
+ 
+
+      // *** SIMPLE TYPEDEFS ***
+
+      // Define an array of string objects.
+      typedef sequence<string> StringList;
+ 
+      // Define an array of long types
+      typedef sequence<long> LongList;
+
+
+      // *** GENERAL OBJECTS ****
+
+      // Define a struct to hold a Name-Values property object. The
+      // NameValueSet is used to hold structured annotation.
+      struct NameValueSet 
+      {
+	// The name of the property.
+	string name;
+
+	// The values of the named property.
+	StringList values;
+      };
+ 
+      // Define an array of Name-Values property objects.
+      typedef sequence<NameValueSet> NameValueSetList;
+ 
+
+      // *** BIOLOGICAL SEQUENCE OBJECTS ****
+
+      // Define type codes for the different types of biological
+      // sequence. As long as the numerical values for previously
+      // declared types do not change, then new types may be added
+      // without the risk of clients using an older version breaking.
+      //
+      //Enums have been removed since they can lead to exactly these
+      //problems for client applications when the IDL is extended. The
+      //new 'const' values are consistent with the previous enum
+      //values.
+      interface SeqType 
+      {
+	//Type codes for different types of biological sequence.
+	const short PROTEIN = 0;
+	const short DNA = 1;
+	const short RNA = 2;
+
+	// Represents anything that is of unknown type.
+	const short UNKNOWN = -1;
+      };
+ 
+
+      // Interface for an ultra lightweight biological sequence object.
+      // AnonymousSeq is the sequence information only.
+      interface AnonymousSeq : GNOME::Unknown 
+      {
+	// Return the type of the biological sequence, e.g. PROTEIN,
+	// RNA, DNA, etc. as defined using the type codes declared in
+	// the SeqType interface.
+	short type(); 
+
+	// Return whether the biological sequence is circular or
+	// linear.
+	boolean is_circular();
+
+	// Return the length of the biological sequence.
+	long length();
+
+	// Return the biological sequence as a string.
+	string seq() 
+	  raises (RequestTooLarge);
+
+	// Return a sub-string of the biological sequence. The start
+	// and end values are in biological coordinates, ie, 1-2 are
+	// the first two bases.
+	string subseq(in long start,
+		      in long end) 
+	  raises (OutOfRange,
+		  RequestTooLarge);
+      };
+ 
+
+      // Interface for a lightweight biological sequence object. A
+      // PrimarySequence object represents just the sequence
+      // information and identity information required to process the
+      // sequence, store results, etc.
+      //
+      // PrimarySeq defines three different types of ID, which may all
+      // have the identical value.
+      interface PrimarySeq : AnonymousSeq 
+      {
+	// Return the ID to be used for display purposes.
+	string display_id();
+
+	// Return the ID to used as a unique ID for this sequence,
+	// e.g. the accession number or the byte position/file munged
+	// into a string.
+	string primary_id();        
+
+	// Return the unique ID for the PrimarySeq in its biological
+	// database.
+	string accession_number();  
+	
+	// Return the (unstable) version number for the sequence. This
+	// is 0 for PrimarySeq objects that do not have a version
+	// number.
+	long version();    
+      };
+ 
+      // Define an array of PrimarySeq objects.
+      typedef sequence<PrimarySeq> PrimarySeqList;
+ 
+
+      // Forward declaration of SeqFeatureVector object.
+      interface SeqFeatureVector;
+ 
+      // Interface for a biological sequence object. Notice that the
+      // Seq object both inheriets from the PrimarySeq interface and
+      // also has-a PrimarySeq interface. This is deliberate so that a
+      // client may indicate when they want to discard a complete Seq
+      // object with SeqFeature features by freeing it, whilst
+      // retaining a reference to a lightweight PrimarySeq object for
+      // it.
+      interface Seq : PrimarySeq 
+      {
+	// Return a SeqFeatureVector that allows access to all the
+	// SeqFeature objects along the Seq. The 'sub_seqfeatures'
+	// flag specifies whether to return all sub-SeqFeatures or
+	// just the top-level ones (c.f. Bio::SeqI of bioperl).
+	SeqFeatureVector all_SeqFeatures(in boolean sub_seqfeatures);
+	
+	// Return a SeqFeatureVector that allows access to all the
+	// SeqFeature objects along the Seq of a particular type,
+	// e.g. exon. The 'sub_seqfeatures' flag specifies whether to
+	// return all sub-SeqFeatures or just the top-level ones
+	// (c.f. Bio::SeqI of bioperl).
+	SeqFeatureVector get_SeqFeatures_by_type(in boolean sub_seqfeatures,
+						 in string type);
+	
+	// Return a SeqFeatureVector that allows access to all the
+	// SeqFeature objects along the given range of the Seq. The
+	// 'sub_seqfeatures' flag specifies whether to return all
+	// sub-SeqFeatures or just the top-level ones (c.f. Bio::SeqI
+	// of bioperl).
+	SeqFeatureVector get_SeqFeatures_in_region(in long start,
+						   in long end, 
+						   in boolean sub_seqfeatures) 
+	  raises (OutOfRange);
+	
+	// Return a SeqFeatureVector that allows access to all the
+	// SeqFeature objects along the given range of the Seq of a
+	// particular type, e.g. exon. The 'sub_seqfeatures' flag
+	// specifies whether to return all sub-SeqFeatures or just the
+	// top-level ones (c.f. Bio::SeqI of bioperl).
+	SeqFeatureVector get_SeqFeatures_in_region_by_type(in long start,
+							   in long end, 
+							   in boolean sub_seqfeatures,
+							   in string type) 
+	  raises (OutOfRange);
+	
+	// Return a reference to a PrimarySeq for this Seq object.
+	// This is so that clients may ask servers for just the
+	// sequence and then free the Seq object and all its
+	// associated SeqFeature objects.
+	PrimarySeq get_PrimarySeq(); 
+      };  
+ 
+      // Define an array of Seq objects.
+      typedef sequence<Seq> SeqList;
+ 
+
+      // *** SEQUENCE FEATURE OBJECTS ***
+
+      // A struct declaring type codes for different types of
+      // fuzziness possible for a position on a biological sequence.
+      interface FuzzyTypeCode 
+      {
+	// Position is 'exact'.
+	const short EXACT = 1;
+
+	// Exact position is unknown, but is within the range
+	// specified, e.g. for ((1.2)..100), the position is 1 or 2
+	// for the start position of the location.
+	const short WITHIN = 2;
+
+	// Exact position is between two of the positions in the range
+	// specified, e.g. for (1^2), the position is between bases 1
+	// and 2.
+	const short BETWEEN = 3;
+
+	// Exact lower boundary of position is unknown, but previous
+	// to the position specified, e.g. for (<10..100), the
+	// position starts before 10 for the start position of the
+	// location.
+	const short BEFORE = 4;
+
+	// Exact upper boundary of position is unknown, but following
+	// the position specified, e.g. for (>10..100), the position
+	// starts after 10 for the start position of the location.
+	const short AFTER = 5;
+      };
+ 
+
+      // A struct defining the properties of a position on a
+      // biological sequence.
+      struct SeqFeaturePosition
+      {
+	// Specifies the position of a SeqFeature on a biological
+	// sequence.
+	long position;
+	
+	// Specifies the extension of the position, e.g. for
+	// (1.3..12), the extension of the start position is 2. For
+	// (1..12), the extension of both the start and end positions
+	// is 0.
+	long extension;
+
+	// Specifies the type code describing the fuzzy character of
+	// the position as specified in FuzzyTypeCode interface.
+	short fuzzy;
+      };
+ 
+
+      // A struct defining the properties of a SeqFeatureLocation
+      // object that specifies the location of a SeqFeature along a
+      // biological sequence using start and end positions. These
+      // positions may be 'fuzzy'. N.B. It is assumed that the
+      // location 'join(1..10,20)' is equivalent to
+      // 'join(1..10,20..20)'.
+      struct SeqFeatureLocation 
+      {
+	// Specifies the (fuzzy) start position of a SeqFeature along
+	// a biological sequence.
+	SeqFeaturePosition start;
+
+	// Specifies the (fuzzy) end position of a SeqFeature along a
+	// biological sequence.
+	SeqFeaturePosition end;
+
+	// Specifices which strand of the Seq the SeqFeatureLocation
+	// lies on. Values: -1,0,1 [-1 = reverse; 0 = either; 1 =
+	// forward]. Irrelevant for proteins.
+	short strand;          
+      };
+ 
+      typedef sequence<SeqFeatureLocation> SeqFeatureLocationList;
+
+ 
+      // Define a SeqFeature object. SeqFeatures are features on a
+      // sequence. This is GFF compatible. We should inherit off
+      // SeqFeature for more complex things. Please inherit off
+      // SeqFeature for your favourtie feature extension.
+      interface SeqFeature : GNOME::Unknown 
+      {
+	// Return the type of the SeqFeature, e.g. exon, repeat, etc.
+	string type();           
+
+	// Return the source of the SeqFeature. This is included
+	// mainly for GFF compatibility.
+	string source();         
+
+	// Return the primary ID of the Seq that this SeqFeature
+	// belongs to.
+	string seq_primary_id(); 
+
+	// Return the start in biological coordinates of the
+	// SeqFeature on the Seq (1 is the first base).
+	long start();            
+
+	// Return the end in biological coordinates of the SeqFeature
+	// on the Seq (start=1:end=2 are the first two bases).
+	long end();              
+
+	// Return which strand of the Seq the SeqFeature lies
+	// on. Values: -1,0,1 [-1 = reverse; 0 = either/both; 1 =
+	// forward]. Irrelevant for proteins.
+	short strand();          
+
+	// Return additional annotation for the SeqFeature which is
+	// stored as Name-Values property objects.
+	NameValueSetList qualifiers(); 
+	
+	// Return a SeqFeaureVector allowing access to references to
+	// the sub-SeqFeature objects of this SeqFeature. This is
+	// similar to how bioperl works (see Bio::SeqIO). The boolean
+        // flag specifies whether all the sub_SeqFeatures below this 
+        // SeqFeature should be returned [true] (i.e. a recursive 
+        // search), or just the immediate children [false].
+	SeqFeatureVector sub_SeqFeatures(in boolean sub_seqfeatures);
+
+	// Return the location of this SeqFeature along its Seq using
+	// SeqFeatureLocation objects. This is similar to how biojava
+	// works.
+	//
+	// For usability, the description of a location in BioCorba is
+	// kept simple and handles only joined locations. For example:
+	//   (1..10) 
+	//   join(1..10,21..30, ...)
+	//   complement(1..10)
+	//   join(complement(1..10),complement(21..30), ...)
+	//   join(complement(1..10),(21..30), ...)
+	//
+	// N.B. The positions of the start and end points may be
+	// fuzzy.
+	//
+	// If the location of a SeqFeature cannot be described by this
+	// simple model (e.g. it uses other operators such as 'group',
+	// 'one-of' or 'order'), then an 'UnableToProcess' exception is
+	// thrown. The Exception description string may return the
+	// actual location as a string for parsing by a client.
+	SeqFeatureLocationList locations()
+	  raises (UnableToProcess);
+
+	// Determine if the PrimarySeq for this SeqFeature is
+	// available.
+	boolean PrimarySeq_is_available();  
+	
+	// Return the PrimarySeq for this SeqFeature, if it is
+	// available.
+	PrimarySeq get_PrimarySeq() 
+	  raises (UnableToProcess); 
+      };
+ 
+
+      // *** ITERATORS FOR BIOLOGICAL OBJECTS ***
+
+      // An interface to an iterator for PrimarySeq objects.
+      interface PrimarySeqIterator : GNOME::Unknown 
+      {
+	// Return a reference to the next PrimarySeq object in this
+	// PrimarySeqIterator.
+	PrimarySeq next() 
+	  raises (EndOfStream);
+
+	// Return whether this PrimarySeqIterator can return another
+	// PrimarySeq objevt.
+	boolean has_more(); 
+      };
+ 
+
+      // An interface to an iterator for SeqFeature objects.
+      interface SeqFeatureIterator : GNOME::Unknown 
+      {
+	// Return the next SeqFeature in this SeqFeatureIterator.
+	SeqFeature next() 
+	  raises (EndOfStream);
+
+	// Return whether this SeqFeatureIterator can return another
+	// SeqFeature object.
+	boolean has_more();
+      };
+ 
+
+      // *** VECTORS FOR BIOLOGICAL OBJECTS ***
+
+      // An interface to a vector of PrimarySeq objects.
+      interface PrimarySeqVector : GNOME::Unknown
+      {
+	// Return the number of PrimarySeq objects in this
+	// vector. Optional implementation.
+	long size();
+
+	// Return the PrimarySeq object at the given position in this
+	// PrimarySeqVector. Optional implementation.
+	PrimarySeq elementAt(in long index)
+	  raises (OutOfRange);
+
+	// Return an iterator for the PrimarySeqobjects in this
+	// PrimarySeqVector.
+	PrimarySeqIterator iterator();
+      };
+ 
+
+      // An interface to a vector of SeqFeature objects.
+      interface SeqFeatureVector : GNOME::Unknown
+      {
+	// Return the number of SeqFeature objects in this
+	// SeqFeatureVector. Optional implementation.
+	long size();
+
+	// Return the SeqFeature object at the given position in this
+	// SeqFeatureVector. Optional implementation.
+	SeqFeature elementAt(in long index)
+	  raises (OutOfRange);
+
+	// Return an iterator for the SeqFeature objects in this
+	// SeqFeatureVector.
+	SeqFeatureIterator iterator();
+      };
+ 
+
+      // *** BIOLOGICAL SEQUENCE DATABASE OBJECTS ****
+
+      // Define a PrimarySeqDB object. PrimarySeqDB provides an
+      // interface to a database that serves PrimarySeq objects. It
+      // can be queried by sequence accession number and return
+      // PrimarySeq objects and vectors.
+      interface PrimarySeqDB : GNOME::Unknown 
+      {
+	// Return the name of this database.
+	string name();     
+
+	// Return the version of this database.
+	long version(); 
+	
+	// Return the length of the largest string for a biological
+	// sequence that can be returned by this server.
+	long max_sequence_length(); 
+
+	// Return a reference to a PrimarySeq object with the given
+	// accession number in this database. If the sequence version
+	// is unknown, or the latest version is required, then specify
+	// version is '0'.
+	PrimarySeq get_PrimarySeq(in string accession_number, 
+				  in long version) 
+	  raises (DoesNotExist);
+
+	// Return a reference to a PrimarySeqVector that may be used
+	// to access all the PrimarySeq objects in this database.
+	PrimarySeqVector get_PrimarySeqVector(); 
+      };
+ 
+
+      // Define a SeqDB object. SeqDB provides an interface to a
+      // database that serves Seq objects. It can be queried by
+      // sequence accession number and return Seq objects.
+      interface SeqDB : PrimarySeqDB 
+      {
+	// Return a reference to a Seq object with the given accession
+	// number in this database. If the sequence version is
+	// unknown, or the latest version is required, then specify
+	// version is '0'.
+	Seq get_Seq(in string accession_number, 
+		    in long version) 
+	  raises (DoesNotExist); 
+
+	// Return a list of all the accession numbers in this
+	// database.
+	StringList accession_numbers();
+      };
+ 
+
+      // An interface to a mutable biological sequence database where
+      // it is possible to add, remove, or update Seq and PrimarySeq
+      // objects.
+      interface UpdateableSeqDB : SeqDB 
+      {
+	// Write lists of updated, added and dead Seq objects to this
+	// database.
+	void write_Seq(in SeqList updatedSeqs, 
+		       in SeqList addedSeqs,
+		       in SeqList deadSeqs) 
+	  raises (NeedsUpdate,
+		  UnableToProcess, 
+		  OutOfRange);
+	
+	// Write lists of updated, added and dead PrimarySeq objects
+	// to this database.
+	void write_PrimarySeq(in PrimarySeqList updatedSeqs, 
+			      in PrimarySeqList addedSeqs,
+			      in PrimarySeqList deadSeqs) 
+	  raises (NeedsUpdate, 
+		  UnableToProcess, 
+		  OutOfRange);
+      };
+ 
+
+      // *** BIOLOGICAL SEQUENCE DATABASE FACTORY OBJECT ***
+
+      // Define a BioEnv object. The BioEnv provides an interface to a
+      // factory for PrimarySeq, Seq and SeqDB references. 
+      //
+      // Notice that we allow concepts like filenames here. If so
+      // wished, the server can throw an exception on all the filename
+      // code (e.g. if client is on a different machine to server).
+      interface BioEnv 
+      {
+	// Return a PrimarySeqVector object generated by this BioEnv
+	// factory from the sequences in the local file specified in
+	// the given format. The format may be an empty string, in
+	// which case the BioEnv factory guesses the format, but
+	// throws an exception if it cannot determine it.
+	PrimarySeqIterator get_PrimarySeqIterator_from_file(in string format,
+							    in string filename) 
+	  raises (UnableToProcess);
+
+	// Return a PrimarySeq object generated by this BioEnv factory
+	// from the sequence in the local file specified in the given
+	// format.
+	PrimarySeq get_PrimarySeq_from_file(in string format,
+					    in string filename) 
+	  raises (UnableToProcess);
+	
+	// Return a Seq object generated by this BioEnv factory from
+	// the sequence in the local file specified in the given
+	// format.
+	Seq get_Seq_from_file(in string format,
+			      in string filename)
+	  raises (UnableToProcess);
+
+	// Return a list of the names of the databases available from
+	// this BioEnv server.
+	StringList get_SeqDB_names();
+
+	// Return a list of the available versions of a database with
+	// the given name.
+	LongList get_SeqDB_versions (in string name)
+	  raises (DoesNotExist);
+
+	// Return a SeqDB reference for the database with the given
+	// name and version. The 'version' may be '0', in which case
+	// the latest version of the database is returned.
+	SeqDB get_SeqDB_by_name(in string name,
+				in long version)
+	  raises (DoesNotExist);
+      };    
+    };
   };
-  
-  // Primary sequences are just the sequence information and enough to
-  // idenity information to process the sequence/store results/etc.
-  
-  interface PrimarySeq : AnonymousSeq {
-    
-    // three different id's which might be the same. The first,
-    // display id is what to use if a human uses it. The second,
-    // primary_id is what the implementation decides as the correct
-    // unique id for this sequence. (in alot of cases this will be
-    // accession number). The final one is the accession number which
-    // is the unique id in the biological database which it is from
-    // (this maybe the same as the primary_id, but might not). Yes -
-    // we do need all three ids.
-    
-    string  display_id();       // id to display to humans 
-    string primary_id();        // id to use as a unique id for this
-                                // sequence. in some cases it could be
-                                // byte position/file munged into a string for example 
-    string  accession_number();  // The unique id (commonly called accession number) in
-                                // the biological database this comes from, not the particular
-                                // instance of the database for the implementation.
-    
-    long    version();    // potential (unstable) version number for the sequence. 0 for
-    // things that don't have a version number
-    
-  };
-  
-  // Represents streaming through a single database, eg over a fasta file
-  // Don't forget to deference objects once they are done
-  interface PrimarySeqIterator : GNOME::Unknown {
-    PrimarySeq next() raises (EndOfStream,UnableToProcess);
-    boolean    has_more(); // returns 1 when next_seq will give an object
-  };
-  
-  // Provides a database mainly for database searching. Can make new
-  // streams and can retrieve sequences from the database.
-  interface PrimarySeqDB : GNOME::Unknown {
-    string  database_name();     // This is to identify databases by name
-    short   database_version();  // version of the database
-    PrimarySeqIterator make_PrimarySeqIterator(); // makes a new iterator object.
-    PrimarySeq get_PrimarySeq(in string primary_id) raises (UnableToProcess); // Retrieves one sequence
-  };
-  
-
-  // We need to be able to pass back additional structured information
-  // in some cases. This gives us a way of doing it without specifying 
-  // the structure at compile time. Try not to abuse this...
-  
-  
-  // This is equivalent to a hash of arrays in perl
-  typedef sequence <string> stringList;
-  struct NameValueSet {
-    string name;
-    stringList values;
-  };
-  
-  typedef sequence <NameValueSet> NameValueSetList;
-  
-  // SeqFeatures are features on a sequence. This is GFF
-  // compatible. 
-  
-  interface SeqFeature : GNOME::Unknown {
-    string type();           // exon, repeat etc.
-    string source();         // source of the SeqFeature mainly for GFF compatibility
-    string seq_primary_id(); // This gives the primary sequence id this is linked to.
-    long start();            // start in biological coordinates (1 is the first base)
-    long end();              // end in biological coordinates (1-2 are the first two bases in a sequence)
-    short strand();          // -1,0,1. -1 means reverse, 0 means either, 1 means forward. Irrelevant for proteins
-    NameValueSetList qualifiers(); // additional structured information
-    boolean    PrimarySeq_is_available();   // returns 1 if it does, 0 if not.
-    PrimarySeq get_PrimarySeq() raises ( UnableToProcess ); // the Sequence may or may not be there.
-                                                            // implementors are free to choose
-  };
-
-  typedef sequence <SeqFeature> SeqFeatureList;
-
-  // We have to handle large numbers of features.
-  interface SeqFeatureIterator : GNOME::Unknown {
-    SeqFeature next() raises (EndOfStream,UnableToProcess);
-    boolean    has_more();
-  };
-
-  // Yes we should inheriet of SeqFeature for more complex things. Please 
-  // inheriet off SeqFeature for your favourtie feature extension!
-  
-  // This is one heavy object, This should really be a number of
-  // coordinating objects underneath. Notice that the Seq object
-  // both inheriets from the PrimarySeq interface and also has-a
-  // PrimarySeq interface. This is deliberate so that clients can
-  // indicate when they really want to discard a complete sequence
-  // with features by freeing but still hold on to the original 
-  // primary sequence.
-
-  // otherwise servers will have extremely large objects for every
-  // sequence in feature rich databases (bad).
-  
-  interface Seq : PrimarySeq {
-    SeqFeatureList     all_features() raises (RequestTooLarge);
-    SeqFeatureIterator all_features_iterator();
-    
-    SeqFeatureList     features_region(in long start,in long end) 
-                             raises (OutOfRange,UnableToProcess,RequestTooLarge);
-    SeqFeatureIterator features_region_iterator(in long start,in long end) 
-                             raises (OutOfRange,UnableToProcess);
-
-    long               max_feature_request();
-
-    // This is put here so that clients can ask servers just for the
-    // sequence and then free the large, seqfeature containing sequence.
-    // It prevents a sequence with features having to stay in memory for ever.
-    PrimarySeq         get_PrimarySeq(); 
-  };  
-
-  typedef sequence <string> primaryidList;
-
-
-  interface SeqDB : PrimarySeqDB {
-    Seq get_Seq(in string primary_id) raises (UnableToProcess); // Retrieves one sequence
-    primaryidList get_primaryidList();
-  };
-
-// mutable sequence can add, remove, or update sequences
-  typedef sequence <Seq> SeqList;
-  typedef sequence <PrimarySeq> PrimarySeqList;
-
-  interface UpdateableSeqDB : SeqDB 
-  {
-    
-    void write_Seq(in SeqList updatedSeqs, 
-		   in SeqList addedSeqs,
-		   in SeqList deadSeqs) 
-      raises ( NeedsUpdate,
-	       UnableToProcess, OutOfRange );
-    
-    void write_PrimarySeq(in PrimarySeqList updatedSeqs, 
-			  in PrimarySeqList addedSeqs,
-			  in PrimarySeqList deadSeqs) 
-      raises ( NeedsUpdate, UnableToProcess, OutOfRange );
-
-  };
-
-  // this allows to get hold of an object which will represent 
-  // accessible code on a particular server. Notice that we allow concepts
-  // like filenames here. If so wished, the server can throw an exception
-  // on all the filename code (eg, client is on a different machine to server!)
-  
-  interface BioEnv {
-    // format can an empty string, in which case BioEnv server guesses/
-    // throws an exception, depending on what it feels like
-    PrimarySeqIterator PrimarySeqIterator_from_file(in string format,in string filename) raises (UnableToProcess);
-    PrimarySeq         PrimarySeq_from_file(in string format,in string filename) raises (UnableToProcess);
-    Seq                Seq_from_file(in string format,in string filename);
-
-    // version can be empty, in which case, assumme the latest version
-    SeqDB              SeqDB_by_name(in string name,in string version);
-  };    
-
-}; // end Seqcore module
-  }; // end Biocorba module
-}; // end org module
-
-
-
-
-
-
+}; 
 

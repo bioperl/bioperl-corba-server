@@ -33,7 +33,7 @@ use Bio::CorbaServer::SeqDB;
 use Bio::CorbaServer::SeqFeature;
 use Bio::CorbaServer::SeqFeatureIterator;
 use Bio::CorbaServer::BioEnv;
+$loaded = 1;
 
-
-print STDERR "\n\tuse the servers and testclients to actually test this code\n";
+print STDERR "\tuse the servers and testclients to actually test this code\n";
 print "ok 1";

@@ -1,4 +1,4 @@
-
+# $Id$
 #
 # BioPerl module for Bio::CorbaServer::BioEnv
 #
@@ -12,81 +12,90 @@
 
 =head1 NAME
 
-Bio::CorbaServer::BioEnv - DESCRIPTION of Object
+Bio::CorbaServer::BioEnv - A biocorba factory for PrimarySeq, Seq, and
+SeqDB objects.
 
 =head1 SYNOPSIS
 
-Give standard usage here
 
 =head1 DESCRIPTION
 
-Describe the object here
+This object handles bootstrapping into the biocorba system
 
 =head1 FEEDBACK
 
 =head2 Mailing Lists
 
-User feedback is an integral part of the evolution of this
-and other Bioperl modules. Send your comments and suggestions preferably
- to one of the Bioperl mailing lists.
-Your participation is much appreciated.
+User feedback is an integral part of the evolution of this and other
+Bioperl modules. Send your comments and suggestions preferably to one
+of the Bioperl mailing lists.  Your participation is much appreciated.
 
-  bioperl-l@bio.perl.org          - General discussion
-  bioperl-guts-l@bio.perl.org     - Technically-oriented discussion
-  http://bio.perl.org/MailList.html             - About the mailing lists
+  bioperl-l@bio.perl.org            - General discussion
+  http://bio.perl.org/MailList.html - About the mailing lists
 
 =head2 Reporting Bugs
 
 Report bugs to the Bioperl bug tracking system to help us keep track
- the bugs and their resolution.
- Bug reports can be submitted via email or the web:
+ the bugs and their resolution.  Bug reports can be submitted via
+ email or the web:
 
   bioperl-bugs@bio.perl.org
   http://bio.perl.org/bioperl-bugs/
 
-=head1 AUTHOR - Ewan Birney
+=head1 AUTHOR - Ewan Birney, Jason Stajich
 
 Email birney@ebi.ac.uk
+      jason@chg.mc.duke.edu
 
 Describe contact details here
 
 =head1 APPENDIX
 
-The rest of the documentation details each of the object methods. Internal methods are usually preceded with a _
+The rest of the documentation details each of the object
+methods. Internal methods are usually preceded with a _
 
 =cut
 
-
 # Let the code begin...
 
-
 package Bio::CorbaServer::BioEnv;
-use vars qw($AUTOLOAD @ISA);
+use vars qw($AUTOLOAD $DEBUG @ISA);
 use strict;
 
 use Bio::SeqIO;
 use Bio::CorbaServer::PrimarySeq;
+use Bio::CorbaServer::Seq;
 use Bio::CorbaServer::Base;
 use Bio::CorbaServer::PrimarySeqIterator;
 
+$DEBUG = 1;
 @ISA = qw( Bio::CorbaServer::Base POA_org::biocorba::seqcore::BioEnv);
 
 
 sub new {
-    my ($class, $poa, @args) = @_;
-    my $self = Bio::CorbaServer::Base->new($poa, @args);
-    bless $self,$class;
+    my ($class, @args) = @_;
+    my $self = $class->SUPER::new(@args);
+    $self->{'_seqdbs'} = {};
     return $self;
 }
 
-sub PrimarySeq_from_file {
-    my $self = shift;
-    my $format = shift;
-    my $file = shift;
+=head2 get_PrimarySeq_from_file
 
-    print STDERR "Got [$self][$format][$file]\n";
+ Title   : get_PrimarySeq_from_file
+ Usage   : my $iteratory = $bioenv->get_PrimarySeq_from_file($format,
+							     $file);
+ Function: creates a PrimarySeq from the first sequence in flatfile requested
+ Returns : Bio::CorbaServer::PrimarySeq
+ Args    : format   - sequence file format (string)
+           file     - filename containing sequence (string)
+
+=cut
+
+sub get_PrimarySeq_from_file {
+    my ($self,$format,$file) = @_;
+
+    print STDERR "Got [$self][$format][$file]\n" if($DEBUG);
     my $seq;
-
 
     eval {
 	my $seqio;
@@ -99,31 +108,47 @@ sub PrimarySeq_from_file {
     };
 
     if( $@ ) {
-	print STDERR "Got exception $@\n";
+	print STDERR "Got exception $@\n" if( $DEBUG);
+	throw org::biocorba::seqcore::UnableToProcess 
+	    reason => 'Could not load the file or file format.';
 	# set exception
     } else {
-	my $servant = Bio::CorbaServer::PrimarySeq->new($self->poa, $seq);
-	print STDERR "Got a ",ref($servant),"... about to activate...\n";
+	my $servant = Bio::CorbaServer::PrimarySeq->new('-poa' => $self->poa, 
+							'-seq' => $seq);
+
+	print STDERR "Got a ",ref($servant),"... about to activate...\n" 
+	    if( $DEBUG);
+
 	my $id = $self->poa->activate_object ($servant);
 	
         # seg faults if I don't touch id. Yikes
 	my $other = $id;
-	print STDERR "Got id $id - $other\n";
+	print STDERR "Got id $id - $other\n" if($DEBUG);
 	my $temp = $self->poa->id_to_reference($id);
 	
-	print STDERR "About to return servant\n";	
+	print STDERR "About to return servant\n" if($DEBUG);
 	return $temp;
     }
 
     die ("should never have got here!");
 }
 
-sub PrimarySeqIterator_from_file {
-    my $self = shift;
-    my $format = shift;
-    my $file = shift;
+=head2 get_PrimarySeqIterator_from_file
+
+ Title   : get_PrimarySeqIterator_from_file
+ Usage   : my $iteratory = $bioenv->get_PrimarySeqIterator_from_file($format,
+								     $file);
+ Function: creates a PrimarySeqIterator for a flatfile containing sequence(s)
+ Returns : Bio::CorbaServer::PrimarySeqIterator
+ Args    : format   - sequence file format (string)
+           file     - filename containing sequence(s) (string)
+
+=cut
+
+sub get_PrimarySeqIterator_from_file {
+    my ($self,$format,$file) = @_;
     
-	my $seqio;
+    my $seqio;
     eval {
         # if no format was passed, we just need to guess
         if ($format !~ /\w/) {
@@ -137,18 +162,135 @@ sub PrimarySeqIterator_from_file {
         throw org::biocorba::seqcore::UnableToProcess 
 		  reason => 'Could not load the file or file format.';
     } else {
-        my $servant = Bio::CorbaServer::PrimarySeqIterator->new($self->poa, 
-          $seqio);
-        my $id = $self->poa->activate_object($servant);
+        my $servant = Bio::CorbaServer::PrimarySeqIterator->new
+	    ('-poa' => $self->poa,
+	     '-seqio' => $seqio
+	     );
+        
+	my $id = $self->poa->activate_object($servant);
         my $object = $self->poa->id_to_reference($id);
         
         return $object;
-    }
-    
+    }    
     die("Bad place to be.");
 }
 
-		
-		
+=head2 get_Seq_from_file
+
+ Title   : get_Seq_from_file
+ Usage   : my $iteratory = $bioenv->get_Seq_from_file($format,$file);
+ Function: creates a Seq from the first sequence in flatfile requested
+ Returns : Bio::CorbaServer::Seq
+ Args    : format   - sequence file format (string)
+           file     - filename containing sequence (string)
+
+=cut
+
+sub get_Seq_from_file {
+    my ($self,$format,$file) = @_;
+
+    print STDERR "Got [$self][$format][$file]\n" if($DEBUG);
+    my $seq;
+
+    eval {
+	my $seqio = $self->_get_seqio;
+	if( $format !~ /\w/ ) {
+	    $seqio = Bio::SeqIO->new(-file => $file);
+	} else {
+	    $seqio = Bio::SeqIO->new(-format => $format,-file => $file);
+	} 
+	$seq = $seqio->next_seq();
+    };
+
+    if( $@ ) {
+	print STDERR "Got exception $@\n" if( $DEBUG);
+	throw org::biocorba::seqcore::UnableToProcess 
+	    reason => 'Could not load the file or file format.';
+	# set exception
+    } else {
+	my $servant = Bio::CorbaServer::Seq->new('-poa' => $self->poa, 
+						 '-seq' => $seq);
+
+	print STDERR "Got a ",ref($servant),"... about to activate...\n" 
+	    if( $DEBUG);
+
+	my $id = $self->poa->activate_object ($servant);
+	
+        # seg faults if I don't touch id. Yikes
+	my $other = $id;
+	print STDERR "Got id $id - $other\n" if($DEBUG);
+	my $temp = $self->poa->id_to_reference($id);
+	
+	print STDERR "About to return servant\n" if($DEBUG);
+	return $temp;
+    }
+
+    die ("should never have got here!");
+}
 
 
+=head2 get_SeqDB_names
+
+ Title   : get_SeqDB_names
+ Usage   : my @names = $bioenv->get_SeqDB_names()
+ Function: returns the list of the names of databases available
+ Returns : list of strings
+ Args    : none
+
+=cut
+
+sub get_SeqDB_names {
+    my ($self ) = @_;
+    return keys %{$self->{'_seqdbs'}};
+}
+
+=head2 get_SeqDB_versions
+
+ Title   : get_SeqDB_versions
+ Usage   : my $version = $bioenv->get_SeqDB_versions($dbname)
+ Function: returns the list of available versions of a database with
+           the given name
+ Returns : array of versions (long)
+ Args    : name of database (string)
+
+=cut
+
+sub get_SeqDB_versions {
+    my ($self, $dbname) = @_;
+
+    my $seqdbhead = $self->{'_seqdbs'}->{$dbname};
+    if( !defined $seqdbhead ) {
+	throw org::biocorba::seqcore::DoesNotExist 
+	    reason => "$dbname is not a known database name.";	
+    }
+    return keys %{$seqdbhead};
+}
+
+=head2 get_SeqDB_by_name
+
+ Title   : get_SeqDB_by_name
+ Usage   : my $version = $bioenv->get_SeqDB_by_name($dbname,$version)
+ Function: returns the stored SeqDB with the given name and version 
+ Returns : Bio::CorbaServer::SeqDB
+ Args    : database name(string)
+           database version (long)
+
+=cut
+
+sub get_SeqDB_versions {
+    my ($self, $dbname,$version) = @_;
+
+    my $seqdbhead = $self->{'_seqdbs'}->{$dbname};
+    if( !defined $seqdbhead ) {
+	throw org::biocorba::seqcore::DoesNotExist 
+	    reason => "$dbname is not a known database name.";	
+    }
+    my $seqdb = $seqdbhead->{$version};
+    if( !defined $seqdb ) {
+	throw org::biocorba::seqcore::DoesNotExist 
+	    reason => "$dbname ($version) is not a known database version.";	
+    }
+    return $seqdb;
+}
+
+1;

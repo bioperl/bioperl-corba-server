@@ -1,4 +1,4 @@
-
+# $Id$
 #
 # BioPerl module for Bio::CorbaServer::PrimarySeq
 #
@@ -16,7 +16,8 @@ Bio::CorbaServer::PrimarySeq - PrimarySeq server bindings
 
 =head1 SYNOPSIS
 
-Give standard usage here
+    # get a Bio::CorbaServer::PrimarySeq somehow
+    my $seqstring = $seq->seq;
 
 =head1 DESCRIPTION
 
@@ -28,28 +29,26 @@ simple as the objects are almost identical
 
 =head2 Mailing Lists
 
-User feedback is an integral part of the evolution of this
-and other Bioperl modules. Send your comments and suggestions preferably
- to one of the Bioperl mailing lists.
-Your participation is much appreciated.
+User feedback is an integral part of the evolution of this and other
+Bioperl modules. Send your comments and suggestions preferably to one
+of the Bioperl mailing lists.  Your participation is much appreciated.
 
   bioperl-l@bio.perl.org          - General discussion
-  bioperl-guts-l@bio.perl.org     - Technically-oriented discussion
   http://bio.perl.org/MailList.html             - About the mailing lists
 
 =head2 Reporting Bugs
 
 Report bugs to the Bioperl bug tracking system to help us keep track
- the bugs and their resolution.
- Bug reports can be submitted via email or the web:
+the bugs and their resolution.  Bug reports can be submitted via email
+or the web:
 
   bioperl-bugs@bio.perl.org
   http://bio.perl.org/bioperl-bugs/
 
-=head1 AUTHOR - Ewan Birney
+=head1 AUTHOR - Ewan Birney, Jason Stajich
 
 Email birney@ebi.ac.uk
-
+      jason@chg.mc.duke.edu
 
 =head1 APPENDIX
 
@@ -68,28 +67,22 @@ use strict;
 
 use Bio::CorbaServer::Base;
 
-# Object preamble - inherits from Bio::Root::Object
-
-@ISA = qw(POA_org::biocorba::seqcore::PrimarySeq Bio::CorbaServer::Base);
+@ISA = qw(POA_org::biocorba::seqcore::PrimarySeq Bio::CorbaServer::Base );
 
 sub new {
-    my ($class, $poa, $seq, @args) = @_;
-    
+    my ($class, @args) = @_;
+    my $self = $class->SUPER::new(@args);
+    my ($seq) = $self->_rearrange([qw(SEQ)],@args);
+
     if( ! defined $seq || !ref $seq || ! $seq->isa('Bio::PrimarySeqI') ) {
 	$seq = '' if( !defined $seq );
 	throw org::biocorba::seqcore::UnableToProcess 
 	    (reason=>$class ." got a non sequence [$seq] for server object");
     }
-
-    my $self = Bio::CorbaServer::Base->new($poa, @args);
-    
-    bless $self,$class;
     $self->_seq($seq);
-    $self->version(0);
-
+    $self->is_circular(0);
     return $self;
 }
-
 
 =head1 AnonymousSeq Methods
 
@@ -98,11 +91,11 @@ Implemented AnonymousSeq Methods
 =head2 type
 
  Title   : type
- Usage   :
- Function:
- Example :
- Returns : 
- Args    :
+ Usage   : my $type = $self->type();
+ Function: Return the type of the biological sequence, e.g. PROTEIN,
+	   RNA, DNA,
+ Returns : type [ PROTEIN, RNA, DNA]
+ Args    : [optional] type to set for this sequence
 
 =cut
 
@@ -127,24 +120,26 @@ sub type {
  Function: Return whether the biological sequence is circular or linear
  Example :
  Returns : boolean
- Args    :
+ Args    : value to set (non zero is true)
 
 =cut
 
 sub is_circular {
-    my $self = shift;
-    return 0;
+    my ($self,$value) = @_;
+    if( defined $value ) {
+	$self->{'_circular'} = $value;
+    }
+    return $self->{'_circular'} ? 1 : 0;
 }
 
 
 =head2 length
 
  Title   : length
- Usage   :
- Function:
- Example :
- Returns : 
- Args    :
+ Usage   : my $len = $obj->length
+ Function: returns length of biological sequence
+ Returns : long
+ Args    : none
 
 =cut
 
@@ -157,11 +152,10 @@ sub length {
 =head2 seq
 
  Title   : seq
- Usage   :
- Function:
- Example :
+ Usage   : my $seqstr = $obj->seq
+ Function: biological sequence as a string
  Returns : string representing sequence contained
- Args    :
+ Args    : none
 
 =cut
 
@@ -175,17 +169,14 @@ sub seq {
 
  Title   : subseq
  Usage   : $self->subseq($begin,$end)
- Function:
- Example :
+ Function: obtains a subsequence of the biological sequence as a string
  Returns : subseq of sequence beginning at start finishing at end
- Args    :
-
+ Args    : start - start point of substring to obtain (sequence start at 1)
+           end   - end point of substring to obtain
 =cut
 
 sub subseq {
-    my $self = shift;
-    my $start = shift;
-    my $end = shift;
+    my ($self,$start,$end) = @_;
     if( !defined $end || !defined $start || ($end < $start) ) {
 	$start = '' if( !defined $start);
 	$end = '' if( !defined $end);
@@ -214,24 +205,16 @@ sub subseq {
 =head2 version
 
  Title   : version
- Usage   :
- Function:
- Example :
- Returns : 
- Args    :
+ Usage   : my $version = $obj->version
+ Function: obtain the sequence version
+ Returns : long representing the sequence version (0 if no version) 
+ Args    : none
 
 =cut
 
 sub version {
-    my ($self,$value) = @_;
-    if( defined $value) {
-	if( $version =~ /^(\s+)?\d+(\s+)?$/ ) {
-	    $self->{_version} = $value;
-	} else {
-	    throw org::biocorba::seqcore::UnableToProcess( reason => "version must be a number not $value");
-	}
-    }
-    return $self->{_version};
+    my ($self) = @_;    
+    return $self->_version;
 }
 
 =head1 PrimarySeq Methods
@@ -251,6 +234,7 @@ PrimarySeq interface methods implemented
 
 sub display_id {
     my $self = shift;
+    print "display id is being called\n";
     return $self->_seq->display_id;
 }
 
@@ -303,14 +287,36 @@ Private Methods local to this module
 
 sub _seq {
     my ($self,$value) = @_;
-    if( defined $value) {
-	$self->{_seqobj} = $value;
+    if( defined $value) {	
+	$self->{'_seqobj'} = $value;
     }
-    return $self->{_seqobj};
+    return $self->{'_seqobj'};
+}
+
+=head1 _version
+
+ Title   : _version
+ Usage   : get/set version
+ Function: if seq object is a RichSeqI it has a seq_version method so
+           seq_version is used if possible otherwise revert to locally 
+           stored value.
+    
+ Example : $self->_version($newversion)
+ Returns : version string
+ Args    : version to set
+
+=cut
+
+sub _version {
+    my ($self,$value) = @_;
+    if( $self->_seq->can('seq_version') ) {
+	return $self->_seq->seq_version($value);
+    }
+    if( defined $value || ! defined $self->{'_version'}) {
+	$self->{'_version'} = 0 if( !defined $value );
+	$self->{'_version'} = $value;
+    }    
+    return $self->{'_version'};
 }
 
 1;
-
-
-	    
-

@@ -12,8 +12,10 @@ chomp $ior;
 close(F);
 
 my $db = $orb->string_to_object($ior);
-
-my $iter = $db->make_PrimarySeqIterator;
+print "db is $db\n";
+my $vector = $db->get_PrimarySeqVector();
+print "vector is $vector\n";
+my $iter = $vector->iterator();
 print "iter is $iter\n";
 
 while ($iter->has_more ) {

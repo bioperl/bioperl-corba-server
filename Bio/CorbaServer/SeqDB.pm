@@ -1,3 +1,4 @@
+# $Id$
 #
 # BioPerl module for Bio::CorbaServer::SeqDB
 #
@@ -69,23 +70,9 @@ use Bio::CorbaServer::PrimarySeqIterator;
 use Bio::CorbaServer::Seq;
 
 
-@ISA = qw(POA_org::biocorba::seqcore::SeqDB Bio::CorbaServer::PrimarySeqDB);
+@ISA = qw(POA_org::biocorba::seqcore::SeqDB Bio::CorbaServer::PrimarySeqDB );
 
-sub new {
-    my ($class,$poa,$name,$seqdb, @args) = @_;
-    my $self = Bio::CorbaServer::PrimarySeqDB->new($poa, $name, $seqdb, @args);
-    
-    bless $self,$class;
-    $self->{_dbname} = $name;
-
-    # ewan - changed this to be a far more generic interface.
-    if( !ref $seqdb || !$seqdb->isa('Bio::DB::SeqI') ) {
-	$self->throw("Could not make a Corba Server from a non Bio::DB::SeqI interface, $seqdb");
-    }
-    # should we make it more generic?
-    $self->_seqdb($seqdb);
-    return $self;
-}
+# new is defined by PrimarySeqDB
 
 =head1 SeqDB Interface Routines
 
@@ -101,13 +88,13 @@ sub new {
 =cut
 
 sub get_Seq {
-    my $self = shift;
-    my $id   = shift;
+    my ($self,$id) = @_;
     my $seq = $self->_seqdb->fetch($id);
     
     if( defined $seq ) {
 	# data marshall object out	
-	my $servant = Bio::CorbaServer::Seq->new($self->poa, $seq);
+	my $servant = Bio::CorbaServer::Seq->new('-poa' => $self->poa, 
+						 '-seq' => $seq);
 	my $id = $self->poa->activate_object($servant);	
 	my $temp = $self->poa->id_to_reference($id);
 	return $temp;
@@ -117,24 +104,22 @@ sub get_Seq {
     }
 }
 
-=head2 get_primaryidList
+=head2 accession_numbers
 
- Title   : get_primaryidList
- Usage   : $self->get_primaryidList()
+ Title   : accession_numbers
+ Usage   : my @ans = $self->accession_numbers()
  Function:
  Example :
- Returns : reference to array containing strings of all primary ids
-           of contained seqs
+ Returns : reference to array containing strings of all accession numbers in db
  Args    : 
 
 =cut
 
-sub get_primaryidList {
-    my $self = shift;    
+sub accession_numbers {
+    my ($self) = @_;    
     my @ids = $self->_seqdb->get_all_primary_ids();
-    return [ @ids ];
+    return \@ids;
 }
-
 
 1;
 

@@ -12,7 +12,8 @@
 
 =head1 NAME
 
-Bio::CorbaServer::Server - BioCorba basic server object used for allocating other BioCorba objects 
+Bio::CorbaServer::Server - BioCorba basic server object used for
+allocating other BioCorba objects
 
 =head1 SYNOPSIS
 
@@ -71,47 +72,44 @@ package Bio::CorbaServer::Server;
 use vars qw($AUTOLOAD @ISA);
 use strict;
 
-use CORBA::ORBit idl => [ 'biocorba.idl' ];
-
-use Bio::Root::Object;
+use Bio::Root::RootI;
 use Bio::CorbaServer::Base;
+use CORBA::ORBit idl => [ 'biocorba.idl' ];
+@ISA = qw ( Bio::Root::RootI );
 
-
-@ISA = qw ( Bio::Root::Object );
-
-sub _initialize { 
-
-    my ( $self, @args ) = @_;
+sub new { 
+    my ( $class, @args) = @_;
+    my $self = $class->SUPER::new(@args);
 
     my ( $idl, $ior, $orbname ) = $self->_rearrange( [ qw(IDL IOR ORBNAME)], 
 						     @args);
 
-    $self->{_ior} = $ior || 'biocorba.ior';
-    $self->{_idl} = $idl || 'biocorba.idl';
-    $self->{_orbname} = $orbname || 'orbit-local-orb';
-    
+    $self->{'_ior'} = $ior || 'biocorba.ior';
+    $self->{'_idl'} = $idl || $ENV{BIOCORBAIDL} || 'biocorba.idl';
+    $self->{'_orbname'} = $orbname || 'orbit-local-orb';
+    $CORBA::ORBit::IDL_PATH = $self->{'_idl'};
     my $orb = CORBA::ORB_init($orbname);
     my $root_poa = $orb->resolve_initial_references("RootPOA");
     
-    $self->{_orb} = $orb;
-    $self->{_rootpoa} = $root_poa;
+    $self->{'_orb'} = $orb;
+    $self->{'_rootpoa'} = $root_poa;
     return $self;
 }
 
 
 sub start { 
     my ($self) = @_;
-    open(OUT, ">" . $self->{_ior}) || 
-	$self->throw("cannot open ior file " . $self->{_ior}); 
-    foreach my $object ( @{$self->{_serverobjs}} ) { 
-	my $id = $self->{_rootpoa}->activate_object($object);
-	my $objref = $self->{_rootpoa}->id_to_reference($id);
-	print OUT $self->{_orb}->object_to_string($objref), "\n";
+    open(OUT, ">" . $self->{'_ior'}) || 
+	$self->throw("cannot open ior file " . $self->{'_ior'}); 
+    foreach my $object ( @{$self->{'_serverobjs'}} ) { 
+	my $id = $self->{'_rootpoa'}->activate_object($object);
+	my $objref = $self->{'_rootpoa'}->id_to_reference($id);
+	print OUT $self->{'_orb'}->object_to_string($objref), "\n";
     }
     close OUT;
     print STDERR "activated server objects, starting server\n";
-    $self->{_rootpoa}->_get_the_POAManager->activate;
-    $self->{_orb}->run;
+    $self->{'_rootpoa'}->_get_the_POAManager->activate;
+    $self->{'_orb'}->run;
 }
 
 sub new_object {
@@ -129,11 +127,12 @@ sub new_object {
     }    
     # create the new object with a no_destroy flag so it can be accessed
     # by multiple clients
-    $obj = $objectname->new( $self->{_rootpoa}, @$args, no_destroy => 1 );    
+    $obj = $objectname->new( '-poa' => $self->{'_rootpoa'}, 
+			     @$args, '-no_destroy' => 1 );    
     if( @$ || !defined $obj ) { 
 	$self->throw("Cannot instantiate object of type $objectname");
     }
-    push @{$self->{_serverobjs}}, $obj;
+    push @{$self->{'_serverobjs'}}, $obj;
     return $obj;
 }
 
@@ -168,7 +167,7 @@ please see the Bio::CorbaServer::Server docs.
 This includes ways of checking for formats at compile time, not run time
 END
 ;
-    return;
+    return 0;
   }
   return 1;
 }

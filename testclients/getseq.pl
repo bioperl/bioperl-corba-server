@@ -12,8 +12,6 @@ chomp $ior;
 close(F);
 
 $seq = $orb->string_to_object($ior);
-
+print "seq is $seq, ",ref($seq), "\n";
 print "sequence name is ",$seq->display_id,"\n";
-print "  seq is",$seq->get_seq(),"\n";
-
 

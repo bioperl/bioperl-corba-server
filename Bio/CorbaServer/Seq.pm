@@ -72,105 +72,153 @@ use strict;
 
 use Bio::CorbaServer::PrimarySeq;
 use Bio::CorbaServer::SeqFeature;
-use Bio::CorbaServer::SeqFeatureIterator;
+use Bio::CorbaServer::SeqFeatureVector;
 
 @ISA = qw(POA_org::biocorba::seqcore::Seq Bio::CorbaServer::PrimarySeq);
 
-sub new {
-    my ($class, $poa, $seq, @args) = @_;
-
-    my $self = Bio::CorbaServer::PrimarySeq->new($poa, $seq, @args);
-
-    if( ! defined $seq || !ref $seq || ! $seq->isa('Bio::SeqI') ) {
-	throw  org::biocorba::seqcore::UnableToProcess (reason=>"Got a non sequence [$seq]");	
-    }
-    bless $self,$class;
-    $self->_seq($seq);
-    return $self;
-}
+# new is handled by PrimarySeq
 
 =head1 Seq functions
 
 These are the key Seq functions
 
-=head2 all_features
+=head2 all_SeqFeatures
 
- Title   : all_features
- Usage   :
- Function:
+ Title   : all_SeqFeatures
+ Usage   : my $feats = $obj->all_SeqFeatures(0);
+ Function: Return a SeqFeatureVector that allows access to all the
  Example :
  Returns : array of all the features of the sequence
- Args    :
+ Args    : boolean whether or not to recurse and include sub feats
 
 =cut
 
-sub all_features {
-    my $self = shift;
+sub all_SeqFeatures {
+    my ($self,$recurse) = @_;
     my @sf;
-    my @ret;
 
-    @sf = $self->_seq->all_SeqFeatures();
-
-    foreach my $sf ( @sf ) {
-	my $serv = Bio::CorbaServer::SeqFeature->new($self->poa,$sf);
-	my $id = $self->poa->activate_object ($serv);
-	my $temp = $self->poa->id_to_reference ($id);
-	push(@ret,$temp);
+    if( $recurse ) {
+	@sf = $self->_seq->all_SeqFeatures();
+    } else { 
+	@sf = $self->_seq->top_SeqFeatures();
     }
-
-    return [@ret];
+    my $s = new Bio::CorbaServer::SeqFeatureVector('-poa'   => $self->poa,
+							 '-items' => \@sf);
+    my $id = $self->poa->activate_object($s);	
+    return $self->poa->id_to_reference($id);
 }
 
-sub all_features_iterator {
-    my $self = shift;
-    my $corbarefs = $self->all_features;
+=head2 get_SeqFeatures_by_type
 
-    my $serv = Bio::CorbaServer::SeqFeatureIterator->new($self->poa, 
-							 $corbarefs);
-    my $id = $self->poa->activate_object($serv);
-    my $temp = $self->poa->id_to_reference($id);
-
-    return $temp;
-}
-
-=head2 features_region
-
- Title   : features_region
- Usage   :
- Function:
- Example :
- Returns : features in a specified region
- Args    :
+ Title   : get_SeqFeatures_by_type
+ Usage   : my $exons = $seq->get_SeqFeatures_by_type(1,'exon');
+ Function: obtain seqFeatures that match a particular SeqFeature type
+ Returns : seq features of a certain type
+ Args    : recurse  - whether or not to recurse into subseq feats
+           type     - seqfeature type to get
 
 =cut
 
-sub features_region {
-
+sub get_SeqFeatures_by_type {
+    my ($self,$recurse,$type) = @_;
+    my $feats = $self->all_SeqFeatures($recurse);
+    my $iter = $feats->iterator();
+    my @feats_to_ret;
+    while( $iter->has_more ) {
+	my $sf = $iter->next;
+	if( $sf->type =~ /$type/i ) {
+	    push @feats_to_ret,$sf;
+	}
+    }
+    my $s = new Bio::CorbaServer::SeqFeatureVector('-poa'   => $self->poa,
+						  '-items' => \@feats_to_ret);
+    my $id = $self->poa->activate_object($s);	
+    return $self->poa->id_to_reference($id);
 }
 
-=head2 features_region_iterator
+=head2 get_SeqFeatures_in_region
 
- Title   : features_region_iterator
- Usage   :
+ Title   : get_SeqFeatures_in_region
+ Usage   : my $feats = $obj->get_SeqFeatures_in_region(100,200, 0);
  Function:
- Example :
- Returns : iterator over a region of features for a sequence
- Args    :
-
+ Example : retrieves SeqFeatures in a specific region
+ Returns : Bio::CorbaServer::SeqFeatureVector
+ Args    : start   - starting point or area to search (long)
+           end     - ending point of area to search   (long)
+           recurse - include sub_seqfeatures? (boolean)
 =cut
 
-sub features_region_iterator {
+sub get_SeqFeatures_in_region {
+    my ($self, $start,$end,$recurse) = @_;
+    my $feats = $self->all_SeqFeatures($recurse);
+    my $iter = $feats->iterator();
+    if( $start > $self->length || $start <= 0 || 
+	$end > $self->length || $end <= 0 || 
+	$end < $start) {
+	throw  org::biocorba::seqcore::UnableToProcess (reason=>"requested region ($start..$end) is not valid for this seq (1..". $self->length.").");	
+    } 
+    my $range = new Bio::Range(-start => $start,
+			       -end   => $end);
+    my @feats_to_ret;
+    while( $iter->has_more ) {
+	my $sf = $iter->next;
+	if( $range->contains($sf) ) {
+	    push @feats_to_ret,$sf;
+	}
+    }
+    my $s = new Bio::CorbaServer::SeqFeatureVector('-poa'   => $self->poa,
+						   '-items' => \@feats_to_ret);
+    my $id = $self->poa->activate_object($s);	
+    return $self->poa->id_to_reference($id);
+}
 
+=head2 get_SeqFeatures_in_region_by_type
+
+ Title   : get_SeqFeatures_in_region_by_type
+ Usage   : my $feats = $obj->get_SeqFeatures_in_region(100,200, 0,'exon');
+ Function: retrieve all the seqfeatures in a specific region of a 
+           specified type
+ Returns : Bio::CorbaServer::SeqFeatureVector
+ Args    : start   - starting point or area to search (long)
+           end     - ending point of area to search   (long)
+           recurse - include sub_seqfeatures? (boolean)
+           type    - type of feature to restrict search by
+=cut
+
+sub get_SeqFeatures_in_region_by_type {
+    my ($self, $start,$end,$recurse,$type) = @_;
+    my $feats = $self->all_SeqFeatures($recurse);
+    my $iter = $feats->iterator();
+    my @feats_to_ret;
+    if( $start > $self->length || $start <= 0 || 
+	$end > $self->length || $end <= 0 || 
+	$end < $start) {
+	throw  org::biocorba::seqcore::UnableToProcess (reason=>"requested region ($start..$end) is not valid for this seq (1..". $self->length.").");	
+    } 
+
+    my $range = new Bio::Range(-start => $start,
+			       -end   => $end);
+			       
+    while( $iter->has_more ) {
+	my $sf = $iter->next;
+	if( $range->contains($sf) && 
+	    $sf->type =~ /$type/i ) {
+	    push @feats_to_ret,$sf;
+	}
+    }
+    my $s= new Bio::CorbaServer::SeqFeatureVector('-poa'   => $self->poa,
+						  '-items' => \@feats_to_ret);
+    my $id = $self->poa->activate_object($s);	
+    return $self->poa->id_to_reference($id);
 }
 
 =head2 get_PrimarySeq
 
  Title   : get_PrimarySeq
- Usage   :
- Function:
- Example :
- Returns : just a primary sequence with no features attached 
- Args    :
+ Usage   : my $pseq = $seq->get_PrimarySeq
+ Function: returns a primary sequence with no features attached
+ Returns : Bio::CorbaServer::PrimarySeq  
+ Args    : none
  
 This is put here so that clients can ask servers just for the
 sequence and then free the large, seqfeature containing sequence.
@@ -179,18 +227,11 @@ It prevents a sequence with features having to stay in memory for ever.
 =cut
 
 sub get_PrimarySeq {
-    my $self = shift;
-    my $servant = Bio::CorbaServer::PrimarySeq->new($self->poa,$self->_seq->primary_seq);
-
-   my $id = $self->poa->activate_object ($servant);
-   my $temp = $self->poa->id_to_reference ($id);
-   return $temp;
-
+    my ($self) = @_;
+    my $s =  new Bio::CorbaServer::PrimarySeq('-poa' => $self->poa,
+					      '-seq' => $self->_seq->primary_seq);
+    my $id = $self->poa->activate_object($s);
+    return $self->poa->id_to_reference($id);
 }
-
-
-
-
-
 
 

@@ -7,6 +7,7 @@ use Bio::CorbaServer::SeqDB;
 use Bio::Index::Fasta;
 my $dir = `pwd`;
 chomp($dir);
+unlink $tst_index_file;
 my $tst_index_file = "$dir/t/testIndex.dbm";
 my $ind = Bio::Index::Fasta->new(-filename => $tst_index_file, 
 				 -write_flag => 1, 
@@ -14,7 +15,6 @@ my $ind = Bio::Index::Fasta->new(-filename => $tst_index_file,
 $ind->make_index("$dir/t/multifa.seq");
 # got to make sure the entire file is synced to disk before proceeeding...
 $ind = undef;
-
 
 # lets go CORBA-ing
 
@@ -31,8 +31,10 @@ my $seqdb = Bio::Index::Fasta->new(-filename => $tst_index_file,
 				 -verbose => 1);
 
 					
-$servant = Bio::CorbaServer::SeqDB->new($root_poa,'test_db', 
-					$seqdb, no_destroy => 1);
+$servant = Bio::CorbaServer::SeqDB->new('-poa'        => $root_poa,
+					'-name'       => 'test_db', 
+					'-seqdb'      => $seqdb, 
+					'-no_destroy' => 1);
 
 # this registers this object as a live object with the ORB
 my $id = $root_poa->activate_object ($servant);

@@ -1,6 +1,6 @@
 # $Id$
 #
-# BioPerl module for Bio::CorbaServer::SeqFeatureIterator
+# BioPerl module for Bio::CorbaServer::SeqFeatureVector
 #
 # Cared for by Jason Stajich <jason@chg.mc.duke.edu>
 #
@@ -12,18 +12,16 @@
 
 =head1 NAME
 
-Bio::CorbaServer::SeqFeatureIterator - a iterator over a list of SeqFeatures
+Bio::CorbaServer::SeqFeatureVector - a vector to hold items
 
 =head1 SYNOPSIS
-
-    my $iterator = $vector->iterator();
-    while( $iterator->has_more ) {
-	my $item = $iterator->next();
-    }
+    my $vector = new Bio::CorbaServer::SeqFeatureVector($self->poa,\@elements);
+    my $size = $vector->size;
+    my $thirdelement = $vector->elementAt(2);
 
 =head1 DESCRIPTION
 
-This object allows iteration through a list of SeqFeatures.
+This object allows vector access to stored items.
 
 =head1 FEEDBACK
 
@@ -37,7 +35,7 @@ of the Bioperl mailing lists.  Your participation is much appreciated.
   http://bio.perl.org/MailList.html  - About the mailing lists
 
 =head2 Reporting Bugs
-
+]
 Report bugs to the Bioperl bug tracking system to help us keep track
 the bugs and their resolution.  Bug reports can be submitted via email
 or the web:
@@ -58,21 +56,20 @@ methods. Internal methods are usually preceded with a _
 
 # Let the code begin...
 
-package Bio::CorbaServer::SeqFeatureIterator;
+package Bio::CorbaServer::SeqFeatureVector;
 
 use vars qw($AUTOLOAD @ISA);
 use strict;
 
 use Bio::CorbaServer::Base;
+use Bio::CorbaServer::SeqFeatureIterator;
 
-@ISA = qw(POA_org::biocorba::seqcore::SeqFeatureIterator 
-	Bio::CorbaServer::Base);
+@ISA = qw(POA_org::biocorba::seqcore::SeqFeatureVector Bio::CorbaServer::Base);
 
 sub new {
-    my ($class, @args) = @_;
+    my ($class, @args) = @_;    
     my $self = $class->SUPER::new(@args);
-    my ($items) = $self->_rearrange([qw(ITEMS)], @args);
-
+    my ($items) = $self->_rearrange([qw(ITEMS)],@args);
     if( $items && ref($items) !~ /array/i ) {
 	throw org::biocorba::seqcore::UnableToProcess 
 	    reason => "initializing a $class with an invalid argument ($items) instead of an array of items";
@@ -81,21 +78,62 @@ sub new {
 	$items = [];
     }
     $self->_elements($items);
-    $self->{'_pointer'} = 0;
-   return $self;
+    return $self;
 }
 
-sub has_more {
+
+=head2 size
+
+ Title   : size
+ Usage   : my $len = $obj->size
+ Function: returns the number elements stored
+ Example : 
+ Returns : size of array
+ Args    : none
+
+=cut
+
+sub size {
     my ($self) = @_;
-    return( $self->{'_pointer'} < scalar @{$self->_elements} );
+    return scalar @{$self->{'_elements'}};
 }
 
-sub next {
+
+=head2 elementAt
+
+ Title   : elementAt
+ Usage   : my $item = $obj->elementAt(2);
+ Function: returns the item stored at 2
+ Example : 
+ Returns : size of array
+ Args    : none
+
+=cut
+
+sub elementAt {
+    my ($self,$index) = @_;
+    if( $index > $self->size || $index < 0 ) {
+	throw org::biocorba::seqcore::OutOfRange 
+	    reason => "index $index is out of range (0,".$self->size.").";
+    }
+    return $self->{'_elements'}->[$index];
+}
+
+=head2 iterator
+
+ Title   : iterator
+ Usage   : my $iter = $obj->iterator();
+ Function: returns an Bio::CorbaServer::Iterator
+ Example : 
+ Returns : iterator
+ Args    : none
+
+=cut
+
+sub iterator {
     my ($self) = @_;
-    my $item = $self->_elements->[$self->{'_pointer'}];
-    $self->{'_pointer'}++;
-    my $s = new Bio::CorbaServer::SeqFeature('-poa' => $self->poa,
-					     '-seqfeature' => $item);
+    my $s = new Bio::CorbaServer::SeqFeatureIterator('-poa'   => $self->poa, 
+						     '-items' => $self->_elements);
     my $id = $self->poa->activate_object($s);
     return $self->poa->id_to_reference($id);
 }
@@ -107,14 +145,14 @@ sub next {
  Function: update local array
  Example : 
  Returns : element array
- Args    : items to store in the local array
+ Args    : arrayref to items to store in the local array
 
 =cut
 
 sub _elements {
     my ($self,$elements) = @_;
-    if( $elements && ref($elements) =~ /array/i ) {
-	$self->{'_elements'} = $elements;
+    if( $elements ) {
+	$self->{'_elements'} = $elements;   
     } 
     return $self->{'_elements'};
 }

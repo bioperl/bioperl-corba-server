@@ -23,6 +23,7 @@ my $server = new Bio::CorbaServer::Server ( -idl => 'biocorba.idl',
 					    -ior => 'seqdbsrv.ior',
 					    -orbname=> 'orbit-local-orb');
 my $seqdb = $server->new_object(-object=>'Bio::CorbaServer::SeqDB',
-				-args => [ 'testdb', $seqdbindex ]);
+				-args => [ '-name' => 'testdb', 
+					   '-seqdb' => $seqdbindex ]);
 
 $server->start();

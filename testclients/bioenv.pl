@@ -6,7 +6,7 @@ foreach $a (@ARGV) {
 }
 
 if( ! defined $file ) {
-    $file ="$ENV{HOME}/proj/bio/bioperl/main-trunk/bioperl-live/t/seqs.fas";
+    $file ="t/test_seq.fasta";
 }
 
 use CORBA::ORBit idl => [ 'biocorba.idl' ];
@@ -29,8 +29,8 @@ close(F);
 $bioenv = $orb->string_to_object($ior);
 print STDERR "Giving fasta [$file]\n";
 
-$seq = $bioenv->PrimarySeq_from_file('fasta',$file);
+$seq = $bioenv->get_PrimarySeq_from_file('fasta',$file);
 
 print "sequence name is ",$seq->display_id,"\n";
-print "  seq is",$seq->get_seq(),"\n";
+print "  seq is",$seq->seq(),"\n";
 

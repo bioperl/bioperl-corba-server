@@ -1,4 +1,4 @@
-
+# $Id$
 #
 # BioPerl module for Bio::CorbaServer::Base
 #
@@ -12,70 +12,71 @@
 
 =head1 NAME
 
-Bio::CorbaServer::Base - DESCRIPTION of Object
+Bio::CorbaServer::Base - BioCorba Base Object, all BioCorba object inherit and are created from it.
 
 =head1 SYNOPSIS
 
-Give standard usage here
+# Do not use this object directly
+# get a biocorba object somehow
+
+    my $poa = $obj->poa;
 
 =head1 DESCRIPTION
 
-Describe the object here
+This is the base object for all perl BioCorba objects, and manages
+reference counts and references to the poa.
 
 =head1 FEEDBACK
 
 =head2 Mailing Lists
 
-User feedback is an integral part of the evolution of this
-and other Bioperl modules. Send your comments and suggestions preferably
- to one of the Bioperl mailing lists.
-Your participation is much appreciated.
+User feedback is an integral part of the evolution of this and other
+Bioperl modules. Send your comments and suggestions preferably to one
+of the Bioperl mailing lists.  Your participation is much appreciated.
 
-  bioperl-l@bio.perl.org          - General discussion
-  bioperl-guts-l@bio.perl.org     - Technically-oriented discussion
-  http://bio.perl.org/MailList.html             - About the mailing lists
+  bioperl-l@bio.perl.org            - General discussion
+  http://bio.perl.org/MailList.html - About the mailing lists
 
 =head2 Reporting Bugs
 
 Report bugs to the Bioperl bug tracking system to help us keep track
- the bugs and their resolution.
- Bug reports can be submitted via email or the web:
+ the bugs and their resolution.  Bug reports can be submitted via
+ email or the web:
 
   bioperl-bugs@bio.perl.org
   http://bio.perl.org/bioperl-bugs/
 
-=head1 AUTHOR - Ewan Birney
+=head1 AUTHOR - Ewan Birney, Jason Stajich
 
 Email birney@ebi.ac.uk
+      jason@chg.mc.duke.edu
 
 Describe contact details here
 
 =head1 APPENDIX
 
-The rest of the documentation details each of the object methods. Internal methods are usually preceded with a _
+The rest of the documentation details each of the object
+methods. Internal methods are usually preceded with a _
 
 =cut
 
-
 # Let the code begin...
-
 
 package Bio::CorbaServer::Base;
 use vars qw($AUTOLOAD @ISA);
 use strict;
 
-# Object preamble - inherits from Bio::Root::RootI
 use Bio::Root::RootI;
+
 @ISA = qw(Bio::Root::RootI);
 
 sub new {
-    my ($class, $poa, @args) = @_;
+    my ($class, @args) = @_;
+        my $self = $class->SUPER::new(@args);
 
-    my $self = bless {}, $class;
+    my ($poa, $no_destroy) = $self->_rearrange([qw(POA NO_DESTROY)], @args);
 
-    my ($no_destroy) = $self->_rearrange(['NO_DESTROY'], @args);
-
-    $self->{'no_destroy'} = $no_destroy if $no_destroy;
+    $self->_no_destroy($no_destroy);
 
     $self->poa($poa);
     $self->reference_count(1);
@@ -84,17 +85,15 @@ sub new {
 
 sub ref {
     my $self = shift;
-
     $self->{'reference_count'}++;
 }
-
 
 sub unref {
     my $self = shift;
     if( $self->reference_count == 1 ) {
-      if (!($self->{'no_destroy'})) {
-	$self->poa->deactivate_object ($self->poa->servant_to_id ($self));
-      }
+	if (!($self->_no_destroy)) {
+	    $self->poa->deactivate_object ($self->poa->servant_to_id ($self));
+	}
     }
     $self->{'reference_count'}--;
 }
@@ -111,13 +110,12 @@ sub unref {
 
 =cut
 
-sub poa{
-   my ($obj,$value) = @_;
-   if( defined $value) {
-      $obj->{'poa'} = $value;
+sub poa {
+    my ($obj,$value) = @_;
+    if( defined $value) {
+	$obj->{'poa'} = $value;
     }
     return $obj->{'poa'};
-
 }
 
 =head2 reference_count
@@ -132,18 +130,34 @@ sub poa{
 
 =cut
 
-sub reference_count{
-   my ($obj,$value) = @_;
-   if( defined $value) {
-      $obj->{'reference_count'} = $value;
+sub reference_count {
+    my ($obj,$value) = @_;
+    if( defined $value) {
+	$obj->{'reference_count'} = $value;
     }
     return $obj->{'reference_count'};
-
 }
 
+=head2 query_interface
 
+ Title   : query_interface
+ Usage   : my $objq = $obj->query_interface($repoid)
+ Function: The query_interface is not important for this case, 
+           but here for completeness.
+ Example : 
+ Returns : 
+ Args    : 
+
+=cut
+
+sub query_interface { return $_[0]; }
+
+sub _no_destroy {
+    my($self,$value) = @_;
+    if( defined $value || !defined $self->{'_no_destroy'}) {
+	$value = 0 if( ! defined $value );
+	$self->{'_no_destroy'} = $value;
+    }
+    return $self->{'_no_destroy'};
+}
 1;
-
-
-
-

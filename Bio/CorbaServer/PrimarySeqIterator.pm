@@ -1,10 +1,10 @@
-
+# $Id$
 #
 # BioPerl module for Bio::CorbaServer::PrimarySeqIterator
 #
-# Cared for by Ewan Birney <birney@ebi.ac.uk>
+# Cared for by Jason Stajich <jason@chg.mc.duke.edu>
 #
-# Copyright Ewan Birney
+# Copyright Jason Stajich
 #
 # You may distribute this module under the same terms as perl itself
 
@@ -12,237 +12,155 @@
 
 =head1 NAME
 
-Bio::CorbaServer::PrimarySeqIterator - CORBA wrapper around a PrimarySeq iterator object
+Bio::CorbaServer::PrimarySeqIterator - a iterator over a list of PrimarySeqs
 
 =head1 SYNOPSIS
 
-  $seqio = Bio::SeqIO->new( -format => 'fasta' , -file => 'some/file');
-  $iterator = Bio::CorbaServer::PrimarySeqIterator->new ($poa,$seqio);
-
-   $poa->activate_object($iterator);
-   # ready to rock and roll.
-
+    my $iterator = $vector->iterator();
+    while( $iterator->has_more ) {
+	my $item = $iterator->next();
+    }
 
 =head1 DESCRIPTION
 
-This provides a CORBA wrapping over any object which implements the
-next_primary_seq method to give back a stream of primary_seq objects.
+This object allows iteration through a list of PrimarySeq objects.
 
 =head1 FEEDBACK
 
 =head2 Mailing Lists
 
-User feedback is an integral part of the evolution of this
-and other Bioperl modules. Send your comments and suggestions preferably
- to one of the Bioperl mailing lists.
-Your participation is much appreciated.
+User feedback is an integral part of the evolution of this and other
+Bioperl modules. Send your comments and suggestions preferably to one
+of the Bioperl mailing lists.  Your participation is much appreciated.
 
-  bioperl-l@bio.perl.org          - General discussion
-  bioperl-guts-l@bio.perl.org     - Technically-oriented discussion
-  http://bio.perl.org/MailList.html             - About the mailing lists
+  bioperl-l@bio.perl.org             - General discussion
+  http://bio.perl.org/MailList.html  - About the mailing lists
 
 =head2 Reporting Bugs
 
 Report bugs to the Bioperl bug tracking system to help us keep track
- the bugs and their resolution.
- Bug reports can be submitted via email or the web:
+the bugs and their resolution.  Bug reports can be submitted via email
+or the web:
 
   bioperl-bugs@bio.perl.org
   http://bio.perl.org/bioperl-bugs/
 
-=head1 AUTHOR - Ewan Birney
+=head1 AUTHOR - Jason Stajich
 
-Email birney@ebi.ac.uk
-
-Describe contact details here
+Email jason@chg.mc.duke.edu
 
 =head1 APPENDIX
 
-The rest of the documentation details each of the object methods. Internal methods are usually preceded with a _
+The rest of the documentation details each of the object
+methods. Internal methods are usually preceded with a _
 
 =cut
-
 
 # Let the code begin...
 
-
 package Bio::CorbaServer::PrimarySeqIterator;
-use vars qw(@ISA);
+
+use vars qw($AUTOLOAD @ISA);
 use strict;
 
-# Object preamble - inherits from Bio::Root::Object
+use Bio::CorbaServer::Base;
 
-use Bio::SeqIO;
-use Bio::CorbaServer::PrimarySeq;
-
-@ISA = qw(Bio::CorbaServer::Base POA_org::biocorba::seqcore::PrimarySeqIterator);
-
+@ISA = qw(POA_org::biocorba::seqcore::PrimarySeqIterator 
+	  Bio::CorbaServer::Base);
 
 sub new {
-    my ($class, $poa, $seqio, @args) = @_;
+    my ($class, @args) = @_;
+    my $self = $class->SUPER::new(@args);
+    my ($items, $seqio) = $self->_rearrange( [qw(ITEMS SEQIO)], @args);
+    if( $items && $seqio ) {
+	throw org::biocorba::seqcore::UnableToProcess 
+	    reason => "initializing $class with invalid arguments both seqio and ($items) were passed in, only 'seqio' or 'items' allowed";
 
-    my $self = Bio::CorbaServer::Base->new($poa, @args);
-
-    if( ! ref $seqio ) {
-	die "Must have poa and seqio into PrimarySeqIterator";
+    } elsif ( $items && ref($items) !~ /array/i ) {
+	throw org::biocorba::seqcore::UnableToProcess 
+	    reason => "initializing a $class with an invalid argument ($items) instead of an array of items";  
+    } elsif( $seqio && (! ref($seqio) || $seqio->isa('Bio::SeqIO') ) ) {
+	throw org::biocorba::seqcore::UnableToProcess 
+	    reason => "initializing a $class with an invalid argument for seqio, must a real Bio::SeqIO reference not ".ref($seqio).".";  
+    } 
+    
+    if( $items ) {
+	$self->_elements($items);
+    } elsif( $seqio ) {
+	$self->_seqio($seqio);
     }
-    bless $self,$class;
-
-    $self->seqio($seqio);
-    $self->at_end(0);
-    $self->_reload();
+    $self->{'_pointer'} = 0;
     return $self;
 }
 
-=head2 next
-
- Title   : next
- Usage   :
- Function:
- Example :
- Returns : 
- Args    :
-
-
-=cut
-
-sub next{
-   my ($self) = @_;
-   my $seq;
-   if( $self->at_end == 1 ) {
-       throw org::biocorba::seqcore::EndOfStream;
-   }
-   $seq= $self->_next_seq();
-   $self->_reload();
-   my $servant = Bio::CorbaServer::PrimarySeq->new($self->poa,$seq);
-
-   my $id = $self->poa->activate_object ($servant);
-   my $temp = $self->poa->id_to_reference ($id);
-   return $temp;
-}
-
-=head2 has_more
-
- Title   : has_more
- Usage   :
- Function:
- Example :
- Returns : 
- Args    :
-
-
-=cut
-
-sub has_more{
-   my ($self) = @_;
-   
-   if($self->at_end == 1 ) {
-       return 0;
-   } else {
-       return 1;
-   }
-}
-
-
-=head2 _reload
-
- Title   : _reload
- Usage   :
- Function:
- Example :
- Returns : 
- Args    :
-
-
-=cut
-
-sub _reload{
-   my ($self) = @_;
-   my $seq;
-
-   eval {
-       $seq = $self->seqio->next_primary_seq();
-   };
-   if( $@ || ! defined $seq ) {
-       $self->at_end(1);
-   } else {
-       $self->_next_seq($seq);
-   }
-
-
-}
-
-=head2 _next_seq
-
- Title   : _next_seq
- Usage   : $obj->_next_seq($newval)
- Function: 
- Example : 
- Returns : value of _next_seq
- Args    : newvalue (optional)
-
-
-=cut
-
-sub _next_seq{
-   my ($obj,$value) = @_;
-   if( defined $value) {
-      $obj->{'_next_seq'} = $value;
+sub has_more {
+    my ($self) = @_;
+    if( defined $self->_seqio ) {
+	# to deal with the fact that SeqIO only 
+	# has one method 'next_seq'
+	$self->{'_next_seq'} = $self->_seqio->next_seq;
+	return defined $self->{'_next_seq'};
+    } else {
+	return( defined $self->_elements && 
+		$self->{'_pointer'} <= scalar @{$self->_elements} );
     }
-    return $obj->{'_next_seq'};
-
 }
 
+sub next {
+    my ($self) = @_;
+    my ($item);
+    if( $self->_seqio ) {
+	# either we have already read in the seq when testing or
+	# we forgot to test or we are trying to go beyond.
+	my $seq  = $self->{"_next_seq"} || $self->_seqio->next_seq;
+	if( !defined $seq ) { throw org::biocorba::seqcore::EndOfStream; }
+	$item = new Bio::CorbaServer::PrimarySeq('-poa' => $self->poa,
+						 '-seq' => $seq);
+    } else {
+	$self->{'_pointer'}++;
+	$item = $self->_elements->[$self->{'_pointer'}];
+    }
+    my $id = $self->poa->activate_object($item);
+    my $temp = $self->poa->id_to_reference ($id);
+    return $temp;
+}
 
+=head2 _elements
 
-=head2 at_end
-
- Title   : at_end
- Usage   : $obj->at_end($newval)
- Function: 
+ Title   : _elements
+ Usage   : $self->_elements($itemarrayref)
+ Function: update local array
  Example : 
- Returns : value of at_end
- Args    : newvalue (optional)
-
+ Returns : element array
+ Args    : items to store in the local array
 
 =cut
 
-sub at_end{
-   my ($obj,$value) = @_;
-   if( defined $value) {
-      $obj->{'at_end'} = $value;
-    }
-    return $obj->{'at_end'};
-
+sub _elements {
+    my ($self,$elements) = @_;
+    if( $elements && ref($elements) =~ /array/i ) {
+	$self->{'_elements'} = $elements;
+    } 
+    return $self->{'_elements'};
 }
 
-=head2 seqio
+=head2 _seqio
 
- Title   : seqio
- Usage   : $obj->seqio($newval)
- Function: 
+ Title   : _seqio
+ Usage   : $self->_seqio($seqioref)
+ Function: get/set seqio reference
  Example : 
- Returns : value of seqio
- Args    : newvalue (optional)
-
+ Returns : seqio reference
+ Args    : items to store in the local array
 
 =cut
 
-sub seqio{
-   my ($obj,$value) = @_;
-   if( defined $value) {
-      $obj->{'seqio'} = $value;
-    }
-    return $obj->{'seqio'};
-
+sub _seqio {
+    my ($self,$seqio) = @_;
+    if( defined $seqio ) {
+	$self->{'_seqio'} = $seqio;
+    } 
+    return $self->{'_seqio'};
 }
 
-
-
-
-
-
-
-
-
-
+1;

@@ -7,7 +7,7 @@ use Bio::PrimarySeq;
 
 $seqio = Bio::SeqIO->new( -format => 'Fasta', -fh => \*STDIN);
 $seq = $seqio->next_seq();
-print STDERR "Got seq",$seq->id,"seq",$seq->seq,"\n";
+print STDERR "Got seq",$seq->id,"\nseq",$seq->seq,"\n";
 
 
 #build the actual orb and get the first POA (Portable Object Adaptor)
@@ -15,11 +15,12 @@ $orb = CORBA::ORB_init("orbit-local-orb");
 $root_poa = $orb->resolve_initial_references("RootPOA");
 
 #build a new CorbaServer object. This is a very light wrapper.
-$servant = Bio::CorbaServer::PrimarySeq->new($root_poa,$seq, no_destroy => 1);
+$servant = Bio::CorbaServer::PrimarySeq->new('-ppoa' => $root_poa,
+					     '-seq'  => $seq, 
+					     '-no_destroy' => 1);
 
 # this registers this object as a live object with the ORB
 my $id = $root_poa->activate_object ($servant);
-
 
 # we need to get the IOR of this object. The way to do this is to
 # to get a client of the object (temp) and then get the IOR of the
