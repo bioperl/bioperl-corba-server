@@ -58,6 +58,8 @@ module org {
   exception OutOfRange { string reason; };      // For when start/end points are out of range.
   exception EndOfStream { };                    // for end of streams
   exception UnableToProcess { string reason; }; // All other errors
+  exception NeedsUpdate { string description; };
+  exception DoesNotExist { string description; };
   
   enum SeqType { PROTEIN,DNA,RNA };
   
@@ -201,11 +203,30 @@ module org {
     primaryidList get_primaryidList();
   };
 
+// mutable sequence can add, remove, or update sequences
+  typedef sequence <Seq> SeqList;
+  typedef sequence <PrimarySeq> PrimarySeqList;
+
+  interface UpdateableSeqDB : SeqDB 
+  {
+    
+    void write_Seq(in SeqList updatedSeqs, 
+		   in SeqList addedSeqs,
+		   in SeqList deadSeqs) 
+      raises ( NeedsUpdate,
+	       UnableToProcess, OutOfRange );
+    
+    void write_PrimarySeq(in PrimarySeqList updatedSeqs, 
+			  in PrimarySeqList addedSeqs,
+			  in PrimarySeqList deadSeqs) 
+      raises ( NeedsUpdate, UnableToProcess, OutOfRange );
+
+  };
+
   // this allows to get hold of an object which will represent 
   // accessible code on a particular server. Notice that we allow concepts
   // like filenames here. If so wished, the server can throw an exception
   // on all the filename code (eg, client is on a different machine to server!)
-
   
   interface BioEnv {
     // format can an empty string, in which case BioEnv server guesses/

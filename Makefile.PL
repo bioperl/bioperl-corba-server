@@ -8,7 +8,7 @@
 #
 # If you want help with this Makefile get in touch with
 # the bioperl core by sending a message to bioperl-bugs@bio.perl.org
-# for real bugs or vsns-bcd-perl-guts@lists.uni-bielefeld.de
+# for real bugs or bioperl-l@bio.perl.org
 # to send a mail to all the bioperl core developpers.
 #
 
