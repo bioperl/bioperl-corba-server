@@ -24,10 +24,12 @@ use CORBA::ORBit idl => [ 'biocorba.idl' ];
 $orb = CORBA::ORB_init("orbit-local-orb");
 $root_poa = $orb->resolve_initial_references("RootPOA");
 
-#build a new CorbaServer object. This is a very light wrapper.
-
-$servant = Bio::CorbaServer::PrimarySeqDB->new($root_poa,'test_db', 
-					       $tst_index_file);
+#build a new CorbaServer object. This is a very light weight wrapper.
+# $servant = Bio::CorbaServer::PrimarySeqDB->new($root_poa,
+#                               'test_db', $tst_index_file);
+					
+$servant = Bio::CorbaServer::SeqDB->new($root_poa,'test_db', 
+					$tst_index_file);
 
 # this registers this object as a live object with the ORB
 my $id = $root_poa->activate_object ($servant);
@@ -39,7 +41,7 @@ $temp = $root_poa->id_to_reference ($id);
 my $ior = $orb->object_to_string ($temp);
 
 # write out the IOR. This is what we give to a different machine
-$ior_file = "simpleseq.ior";
+$ior_file = "seqdbsrv.ior";
 open (OUT, ">$ior_file") || die "Cannot open file for ior: $!";
 print OUT "$ior";
 close OUT;

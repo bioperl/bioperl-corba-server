@@ -2,7 +2,7 @@
 
 use CORBA::ORBit idl => [ 'biocorba.idl' ];
 use Error;
-$ior_file = "simpleseq.ior";
+$ior_file = "seqdbsrv.ior";
 print STDERR "Got file $ior_file\n";
 $orb = CORBA::ORB_init("orbit-local-orb");
 

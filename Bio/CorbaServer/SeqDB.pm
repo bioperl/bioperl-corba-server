@@ -101,7 +101,7 @@ sub new {
 sub get_Seq {
     my $self = shift;
     my $id   = shift;
-    my $seq = $self->seqdb->get_Seq_by_primary_id($id);
+    my $seq = $self->seqdb->fetch($id);
     
     if( defined $seq ) {
 	# data marshall object out	
