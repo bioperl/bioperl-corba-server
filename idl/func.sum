@@ -1,0 +1,39 @@
+
+
+AnonymousSequence
+ remove - removes
+ get_length
+ get_type
+ is_circular
+ seq raises RequestTooLarge
+ sub_seq (stat,end) Raises OutOfBounds RequestTooLarge 
+
+
+BioSequence
+ All-anonymous-sequence (above)
+ string get_id
+ string get_name
+ string get_description
+ Basis  get_basis
+ SeqFeatureCollection get_seq_features()
+ AnnotationCollection get_annotations()
+
+
+SeqFeatureCollection
+ remove
+ get_num_annotations()
+ get_annotations()
+ get_annotations_by_name()
+ get_features_on_region()
+ num_features_on_region()
+
+
+SeqFeature
+ remove
+ get_name  # means primary_tag in bioperl
+ get_basis 
+ get_value # the object this points to...
+ get_start
+ get_end
+ get_locations()
+ get_owner_sequence() Raises DoesNotExist
