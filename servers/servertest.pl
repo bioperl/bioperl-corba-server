@@ -24,3 +24,7 @@ my $seqdb = $server->new_object(-object=>'Bio::CorbaServer::SeqDB',
 				-args => [ '-seqdb' => $ind ]);
 
 $server->start();
+
+END {
+    unlink 'seqdbsrv.ior';
+}
