@@ -65,6 +65,7 @@ use vars qw(@ISA %FUZZYCODES);
 use strict;
 use Bio::CorbaServer::Base;
 use Bio::CorbaServer::Iterator;
+use Bio::CorbaServer::AnnotationCollection;
 use Bio::CorbaServer::Utils qw(create_Bioperl_location_from_BSANE_location
 			       create_BSANE_location_from_Bioperl_location);
 
@@ -162,9 +163,14 @@ sub get_basis{
 
 sub get_annotations{
    my ($self) = @_;
-   return ();
+   my %tags;
+   foreach my $tag ( $self->_seqf->all_tags ) {
+       $tags{$tag} = [ $self->_seqf->each_tag_value($tag) ];
+   }
+   my $col = new Bio::CorbaServer::AnnotationCollection('-poa' => $self->poa,
+							'-tags' => \%tags);
+   return $col->get_activated_object_reference();
 }
-
 
 =head2 base::seqcore::SeqFeature methods
 
