@@ -64,7 +64,7 @@ package Bio::CorbaServer::SeqFeature;
 use vars qw(@ISA %FUZZYCODES);
 use strict;
 use Bio::CorbaServer::Base;
-use Bio::CorbaServer::SeqFeatureVector;
+use Bio::CorbaServer::Iterator;
 use Bio::CorbaServer::Utils qw(create_Bioperl_location_from_BSANE_location
 			       create_BSANE_location_from_Bioperl_location);
 
@@ -81,58 +81,99 @@ sub new {
     return $self;
 }
 
-=head2 type
+=head2 bsane::Annotation methods
 
- Title   : type
- Usage   : my $type = $sf->type;
- Function: return the type of seqfeature ie 'exon'
+=head2 get_name
+
+ Title   : get_name
+ Usage   : my $name = $annotation->get_name()
+ Function: Returns the general type of the annotation
  Returns : string
  Args    : none
 
 
 =cut
 
-sub type{
+sub get_name{
    my ($self) = @_;
    return $self->_seqf->primary_tag;
 }
 
-=head2 source
+=head2 get_basis
 
- Title   : source
- Usage   : my $src = $sf->source;
- Function: return the source of the seqfeature (GFF compatibility)
- Returns : string
+ Title   : get_basis
+ Usage   : my $basis = $annotation->get_basis();
+ Function: Returns the basis for an annotation
+           valid types are
+           NOT_KNOWN=0
+           EXPERIMENTAL=1
+           COMPUTATIONAL=2
+           BOTH=3
+           NOT_APPLICABLE=4
+ Returns : numeric representing one of the above
  Args    : none
 
+=cut
+
+sub get_basis{
+   my ($self) = @_;
+   my $tag = $self->_seqf->source_tag;
+   if( ! defined $tag || $tag eq '' ) {
+       return 0;
+   } elsif( $tag =~ /experiment/i ) {
+       return 1;
+   } elsif( $tag =~ /computation/i ) {
+       return 2;
+   } elsif( $tag =~ /both/i ) {
+       return 3;
+   } else { 
+       return 4;
+   }
+}
+
+=head2 bsane::Annotatable methods
+
+=head2 get_annotations
+
+ Title   : get_annotations
+ Usage   : my $collection = $annotatable->get_annotations()
+ Function: Returns a AnnotationCollection of annotations for this object
+ Returns : bsane::AnnotationCollection 
+ Args    : none
 
 =cut
 
-sub source {
-  my ($self) = @_;
-  return $self->_seqf->source_tag;
+sub get_annotations{
+   my ($self) = @_;
+
+# jason to fix at some point
+#   my ($self,$how_many, $iterator) = @_;
+   
+#    my @subfeatures;
+#    if( $recurse ) {
+#	@subfeatures = &_recurse_seqf($self->_seqf);
+#    } else { 
+#	@subfeatures = $self->_seqf->sub_SeqFeature();
+#    }
+
+#    my @final;
+#    foreach my $subf ( @subfeatures ) {
+#	my $sf = new Bio::CorbaServer::SeqFeature('-poa' => $self->poa,
+#						  '-seqfeature' => $subf);
+#	push @final, $sf;
+#    }
+#    my $s = new Bio::CorbaServer::Iterator('-poa' => $self->poa,
+#					   '-elements' => \@final);
+#    return $s->get_activated_object_reference();
 }
 
 
-=head2 seq_primary_id
-
- Title   : seq_primary_id
- Usage   : my $Id  = $sf->seq_primary_id;
- Function: returns the primary id of seq that seqfeature belongs to
- Example :
- Returns : seq_id of the 
- Args    : 
-
-=cut
-
-sub seq_primary_id {
-  my ($self) = @_;
-  return $self->_seqf->location->seq_id || -1;
-}
+=head2 base::seqcore::SeqFeature methods
 
 =head2 get_start
 
  Title   : get_start
+
  Usage   : my $start  = $obj->get_start 
  Function: starting position of seqfeature 
  Returns : long
@@ -158,37 +199,6 @@ sub get_start {
 sub get_end {
    my ($self) = @_;
    $self->_seqf->end;
-}
-
-=head2 sub_SeqFeatures
-
- Title   : sub_SeqFeatures
- Usage   : my $featvector = $obj->sub_SeqFeatures();
- Function: return a SeqFeatureVector containing all sub features 
- Returns : Bio::CorbaServer::SeqFeatureVector
- Args    : boolean (search recursively)
-
-=cut
-
-sub sub_SeqFeatures {
-    my($self, $recurse) = @_;
-        
-    my @subfeatures;
-    if( $recurse ) {
-	@subfeatures = &_recurse_seqf($self->_seqf);
-    } else { 
-	@subfeatures = $self->_seqf->sub_SeqFeature();
-    }
-
-    my @final;
-    foreach my $subf ( @subfeatures ) {
-	my $sf = new Bio::CorbaServer::SeqFeature('-poa' => $self->poa,
-						  '-seqfeature' => $subf);
-	push @final, $sf;
-    }
-    my $s = new Bio::CorbaServer::SeqFeatureVector('-poa' => $self->poa,
-						   '-elements' => \@final);
-    return $s->get_activated_object_reference();
 }
 
 =head2 get_locations
@@ -217,6 +227,31 @@ sub get_locations {
     return $ref;
 }
 
+=head2 get_owner_sequence
+
+ Title   : get_owner_sequence
+ Usage   : my $seq = $sf->get_owner_sequence()
+ Function: Returns a bsane::seqcore::AnonymousSeq that is the owner of this seq
+ Returns : bsane::seqcore::AnonymousSeq (Bio::CorbaServer::PrimarySeq)
+ Args    : none
+
+
+=cut
+
+sub get_owner_sequence{
+   my ($self) = @_;
+   my $seq;
+   if( $self->can('entire_seq') || 
+       ! defined ( $seq = $self->_seqf->entire_seq())) {       
+       my $s = new Bio::CorbaServer::PrimarySeq('-poa' => $self->poa,
+						'-seq' => $seq);
+       return $s->get_activated_object_reference();
+   } else {
+       throw org::biocorba::seqcore::UnableToProcess(reason=>'owner seq is not available') ;
+   }
+   return undef;
+}
+
 # for recursively getting all the locations
 
 sub _buildlocations {
@@ -224,7 +259,6 @@ sub _buildlocations {
 
     #print STDERR "Building a location with $location\n";
 
-    ;    
     my @locations;
     if( $location->isa('Bio::Location::SplitLocationI') ) {
 	foreach my $loc ( $location->sub_Location() ) {
@@ -271,46 +305,6 @@ sub _buildlocations {
 #    }
 
     return @locations;
-}
-
-=head2 PrimarySeq_is_available
-
- Title   : PrimarySeq_is_available
- Usage   : if( $seqf->PrimarySeq_is_available) { ... }
- Function: returns if PrimarySeq is available (and attached)
- Returns : boolean
- Args    : none
-
-=cut
-
-sub PrimarySeq_is_available{
-   my ($self) = @_;
-   if( $self->can('seq') ) {
-       return ( defined $self->_seqf->seq() );
-   }
-   return 0;
-}
-
-=head2 get_PrimarySeq
-
- Title   : get_PrimarySeq
- Usage   : my $pseq = $seqf->get_PrimarySeq();
- Function: returns the primary sequence for this SeqFeature
- Returns : Bio::CorbaServer::PrimarySeq
- Args    : none
-
-=cut
-
-sub get_PrimarySeq{
-   my ($self) = @_;
-   if( $self->PrimarySeq_is_available ) {
-       my $s = new Bio::CorbaServer::PrimarySeq('-poa' => $self->poa,
-					       '-seq' => $self->_seqf->seq());
-       return $s->get_activated_object_reference();
-   } else {
-       throw org::biocorba::seqcore::UnableToProcess(reason=>'PrimarySeq is not available') ;
-   }
-   return undef;
 }
 
 # private methods

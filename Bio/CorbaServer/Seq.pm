@@ -71,10 +71,9 @@ use strict;
 use Bio::CorbaServer::PrimarySeq;
 use Bio::CorbaServer::Base;
 use Bio::CorbaServer::SeqFeatureCollection;
-#use Bio::CorbaServer::AnnotationCollection;
+use Bio::CorbaServer::AnnotationCollection;
 
-@ISA = qw( POA_bsane::seqcore::BioSequence 
-	 Bio::CorbaServer::PrimarySeq  );
+@ISA = qw( POA_bsane::seqcore::BioSequence Bio::CorbaServer::PrimarySeq  );
 
 =head2 BioSequence methods
 
@@ -124,7 +123,10 @@ sub get_seq_features{
 
 sub get_annotations {
     my ($self) = @_;
-    return undef;
+    my $anc = new Bio::CorbaServer::AnnotationCollection
+	('-poa' => $self->poa,
+	 '-collection' => $self->_seq->annotation);
+    return $anc->get_activated_object_reference;
 }
 
 =head2 get_alphabet

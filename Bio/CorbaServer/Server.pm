@@ -1,4 +1,4 @@
-
+# $Id$
 #
 # BioPerl module for Bio::CorbaServer::Server
 #
@@ -76,10 +76,10 @@ BEGIN {
 
 use vars qw(@ISA);
 use strict;
-use CORBA::ORBit idl => [ "$ENV{BIOCORBAHOME}/idl/seqcore.idl" ];
-use Bio::Root::RootI;
+use CORBA::ORBit idl => [ "$ENV{BIOCORBAHOME}/idl/biocorba.idl" ];
+use Bio::Root::Root;
 
-@ISA = qw ( Bio::Root::RootI );
+@ISA = qw ( Bio::Root::Root );
 
 sub new { 
     my ( $class, @args) = @_;
@@ -94,7 +94,6 @@ sub new {
     $CORBA::ORBit::IDL_PATH = $self->{'_idl'};
     my $orb = CORBA::ORB_init($orbname);
     my $root_poa = $orb->resolve_initial_references("RootPOA");
-    
     $self->{'_orb'} = $orb;
     $self->{'_rootpoa'} = $root_poa;
     return $self;
@@ -110,7 +109,7 @@ sub start {
 	print OUT $self->{'_orb'}->object_to_string($objref), "\n";
     }
     close OUT;
-    print STDERR "activated server objects, starting server\n";
+    $self->debug( "activated server objects, starting server\n");
     $self->{'_rootpoa'}->_get_the_POAManager->activate;
     $self->{'_orb'}->run;
 }

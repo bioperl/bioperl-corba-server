@@ -69,10 +69,10 @@ package Bio::CorbaServer::Base;
 use vars qw($AUTOLOAD @ISA);
 use strict;
 
-use Bio::Root::RootI;
+use Bio::Root::Root;
 use CORBA::ORBit;
 
-@ISA = qw(Bio::Root::RootI);
+@ISA = qw(Bio::Root::Root);
 
 sub new {
     my ($class, @args) = @_;

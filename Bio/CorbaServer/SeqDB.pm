@@ -94,21 +94,30 @@ The rest of the documentation details each of the object methods. Internal metho
 
 =cut
 
-
 # Let the code begin...
-
 
 package Bio::CorbaServer::SeqDB;
 use vars qw(@ISA);
 use strict;
 
 # Object preamble - inherits from Bio::CorbaServer::PrimarySeqDB
-use Bio::CorbaServer::PrimarySeqDB;
-use Bio::CorbaServer::PrimarySeqIterator;
 use Bio::CorbaServer::Seq;
 
-@ISA = qw(POA_bsane::collection::SeqDB  Bio::CorbaServer::Base );
+@ISA = qw(POA_bsane::collection::BioSequenceCollection 
+	Bio::CorbaServer::Base );
 
+sub new {
+    my ($class, @args) = @_;
+    my $self = $class->SUPER::new(@args);
+    my ($seqdb) = $self->_rearrange([qw(SEQDB)],@args);
+    if( ! defined $seqdb || !ref $seqdb || 
+	! $seqdb->isa('Bio::DB::RandomAccessI') ) {
+        $seqdb = '' if( !defined $seqdb );
+        $self->throw($class ." got a non sequencedb [$seqdb] for server object");
+    }
+    $self->_seqdb($seqdb);
+    return $self;
+}
 
 =head1 bsane::collection methods
 
@@ -125,68 +134,55 @@ use Bio::CorbaServer::Seq;
 =cut
 
 sub resolve{
-   my ($self,@args) = @_;
-   
+   my ($self,$id) = @_;
+   print "id is $id\n";
    my $seq = $self->_seqdb->get_Seq_by_acc($id);
    if( ! $seq ) { 
        $seq = $self->_seqdb->get_Seq_by_id($id)
    }
    
    my $seqobj = new Bio::CorbaServer::Seq('-seq' => $seq,
-					   '-poa' => $self->poa);
-   return $seqobj->->get_activated_object_reference();
+					  '-poa' => $self->poa);
+   return $seqobj->get_activated_object_reference();
 }
 
-=head1 SeqDB Interface Routines
+=head2 get_seqs
 
-=head2 get_Seq
-
- Title   : get_Seq
- Usage   : 
+ Title   : get_seqs
+ Usage   :
  Function:
  Example :
- Returns : a sequence for a specific id
- Args    : accessor id for the sequence to return
+ Returns : 
+ Args    :
+
 
 =cut
 
-sub get_Seq {
-    my ($self,$id) = @_;
-    print STDERR "Getting $id\n";
+sub get_seqs{
+   my ($self,@args) = @_;
 
-    my $seq = $self->_seqdb->get_Seq_by_acc($id);
-
-    if( $seq->accession ne $id) {
-	$self->warn("This looks like a problem - asked for $id, got ".$seq->accession);
-    }
-
-
-    if( defined $seq ) {
-	# data marshall object out	
-	my $servant = Bio::CorbaServer::Seq->new('-poa' => $self->poa, 
-						 '-seq' => $seq);
-	return $servant->get_activated_object_reference;
-    } else {
-	throw org::biocorba::seqcore::UnableToProcess
-	    ( reason => ref($self)." could not find seq for $id");	
-    }
 }
 
-=head2 accession_numbers
 
- Title   : accession_numbers
- Usage   : my @ans = $self->accession_numbers()
- Function:
- Example :
- Returns : reference to array containing strings of all accession numbers in db
- Args    : 
+=head2 _seqdb
+
+ Title   : _seqdb
+ Usage   : $obj->_seqdb($newval)
+ Function: 
+ Example : 
+ Returns : value of _seqdb
+ Args    : newvalue (optional)
+
 
 =cut
 
-sub accession_numbers {
-    my ($self) = @_;    
-    my @ids = $self->_seqdb->get_all_primary_ids();
-    return \@ids;
+sub _seqdb{
+   my ($self,$value) = @_;
+   if( defined $value) {
+      $self->{'_seqdb'} = $value;
+    }
+    return $self->{'_seqdb'};
+
 }
 
 1;

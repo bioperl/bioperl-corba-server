@@ -74,7 +74,6 @@ use Bio::CorbaServer::Base;
 use Bio::CorbaServer::SeqFeatureCollection;
 use Bio::CorbaServer::Utils qw( create_Bioperl_location_from_BSANE_location
 				create_BSANE_location_from_Bioperl_location);
-#use Bio::CorbaServer::AnnotationCollection;
 
 @ISA = qw( POA_bsane::seqcore::NucleotideSequence 
 	 Bio::CorbaServer::Seq  );

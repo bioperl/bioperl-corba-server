@@ -79,7 +79,7 @@ sub new {
     my $self = $class->SUPER::new(@args);
     my ($seq) = $self->_rearrange([qw(SEQ)],@args);
 
-    if( ! defined $seq || !ref $seq || ! $seq->isa('Bio::PrimarySeqI') ) {
+    if( ! defined $seq || !ref $seq || ! $seq->isa('Bio::SeqI') ) {
 	$seq = '' if( !defined $seq );
 	$self->throw($class ." got a non sequence [$seq] for server object");
     }
@@ -88,15 +88,33 @@ sub new {
 }
 
 
+=head2  bsane::AnnotationCollection methods
+
+=head2 get_num_annotations
+
+ Title   : get_num_annotations
+ Usage   : my $count = $collection->get_num_annotations();
+ Function: Returns the number of annotations in this collection
+ Returns : unsigned long
+ Args    : none
+ Note    : Annotations are not what Bioperl thinks of as Annotation!
+
+=cut
+
+sub get_num_annotations{
+   my ($self) = @_;
+   return $self->_seq->feature_count;
+}
+
 =head2 get_annotations
 
  Title   : get_annotations
- Usage   : my $feats = $obj->get_annotations();
- Function: 
- Example :
- Returns : array of all the features of the sequence
- Args    : 
-
+ Usage   : my $feats = $obj->get_annotations($n, \$iterator);
+ Function: Gets the annotations for a sequence feature collection
+ Returns : array of all the Annotations of the sequence
+ Args    : $how_many - integer, number of annotations to return in the 
+                       list
+           $iterator - iterator object to place the rest of annotations in
 =cut
 
 sub get_annotations {
@@ -122,12 +140,13 @@ sub get_annotations {
     return @obj;
 }
 
+=head2 bsane::seqcore::SeqFeatureCollection methods
+
 =head2 get_features_on_region
 
  Title   : get_features_on_region
- Usage   : 
+ Usage   : my $ 
  Function:
- Example :
  Returns : Array of features in a region 
  Args    : int how_many       -- maximum number of features to return
            SeqFeatureLocation -- SeqFeatureLocation to search
@@ -206,11 +225,11 @@ sub num_features_on_region {
     return $count;
 }
 
-=head1 Private Methods
+=head2 Private Methods
 
 Private Methods local to this module
 
-=head1 _seq
+=head2 _seq
 
  Title   : _seq
  Usage   : get/set seq reference
