@@ -89,7 +89,6 @@ sub new {
     my ($class, @args) = @_;
     my $self = $class->SUPER::new(@args);
     my ($col,$tags) = $self->_rearrange([qw(COLLECTION TAGS)],@args);
-    
     if( defined $col && ref($col) && 
 	$col->isa('Bio::AnnotationCollectionI') ) {
 	if( defined $tags ) { $self->warn("initializing annotation collection with both a bioperl annotation collection and tags, ignoring tags") }
@@ -138,7 +137,6 @@ sub get_num_annotations{
 
 sub get_annotations{
    my ($self,$howmany,$iterator) = @_;
-
    my @data;
    if( defined $self->_collection ) {
        foreach my $key ( $self->_collection->get_all_annotation_keys() ) {
@@ -151,8 +149,9 @@ sub get_annotations{
 	       push @data, $a->get_activated_object_reference();
 	   }
        }
-   } else { 
+   } else {
        my $tags = $self->_tags;
+       
        foreach my $key ( keys %{$tags} ) {
 	   my $values = $tags->{$key};
 	   foreach ( @$values ) {
@@ -166,7 +165,7 @@ sub get_annotations{
        }
    }
    my @values;
-   for(my $i = 0; $i < $howmany; $i++ ) {
+   for(my $i = 0; $i < $howmany && @data; $i++ ) {
        push @values, shift @data;
    }
    $iterator = new Bio::CorbaServer::Iterator('-poa' => $self->poa,
