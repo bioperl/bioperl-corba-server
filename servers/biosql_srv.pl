@@ -30,21 +30,26 @@ BEGIN {
 
 use Bio::CorbaServer::Server;
 use Bio::DB::SQL::DBAdaptor;
+use Bio::DB::InMemoryCache;
 use Getopt::Long;
 use Bio::SeqIO;
 
 my $host = "localhost";
-my $sqlname = "bioperl_db";
+my $sqlname = "test_biosql";
 my $dbuser = "root";
 my $dbpass = undef;
 #If safe is turned on, the script doesn't die because of one bad entry..
 my $safe = 0;
+my $cache = 0;
+my $agr = 0;
 
 &GetOptions( 'host:s' => \$host,
              'sqldb:s'  => \$sqlname,
              'dbuser:s' => \$dbuser,
              'dbpass:s' => \$dbpass,
-             'safe'     => \$safe
+             'safe'     => \$safe,
+	     'cache'   => \$cache,
+             'agressive:i' => \$agr,
              );
 
 my $dbname = shift;
@@ -60,7 +65,14 @@ my $dbadaptor = Bio::DB::SQL::DBAdaptor->new( -host => $host,
 					      -pass => $dbpass
 					      );
 
+
+    
+
 my $seqdb = $dbadaptor->get_BioDatabaseAdaptor->fetch_BioSeqDatabase_by_name($dbname);
+
+if( $cache ) {
+    $seqdb = Bio::DB::InMemoryCache->new( -seqdb => $seqdb, -agression => $agr);
+}
 
 my $server = new Bio::CorbaServer::Server ( -idl => 'idl/biocorba.idl',
 					    -ior => 'sqldbsrv.ior',
