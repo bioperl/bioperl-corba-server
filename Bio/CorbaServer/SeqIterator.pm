@@ -117,7 +117,7 @@ sub next {
     my $next = $self->_seqio->next_seq;
     if( ! defined $next ) {
 	return (0,undef);
-#	throw bsane::OutOfBounds('reason' => 'End of Sequence stream reached');
+#	throw bsane::IteratorInvalid('reason' => 'End of Sequence stream reached');
     }
     if( $next->isa('Bio::SeqI') ) {
 	$item = new Bio::CorbaServer::Seq('-poa' => $self->poa,
@@ -130,6 +130,42 @@ sub next {
     }
     my $ref = $item->get_activated_object_reference;
     return (1,$ref);
+}
+
+=head2 next_n
+
+ Title   : next_n
+ Usage   : my @items = $self->next_n($count);
+ Function: Returns the next $count sequences
+ Returns : List of Sequences
+ Args    : Count of sequences
+
+
+=cut
+
+sub next_n{
+    my ($self,$count) = @_;
+    if( ! defined $self->_seqio ) {
+	throw bsane::IteratorInvalid('reason' => 'SeqIO has been resent in Perl Iterator implementation');
+    }
+    my $counter = 0;
+    my @list;
+    while( $counter < $count ) {
+	my $next = $self->_seqio->next_seq;
+	last unless (defined $next );
+	my $item;
+	if( $next->isa('Bio::SeqI') ) {
+	    $item = new Bio::CorbaServer::Seq('-poa' => $self->poa,
+					      '-seq' => $next);
+	} elsif( $next->isa('Bio::PrimarySeqI') ) {
+	    $item = new Bio::CorbaServer::PrimarySeq('-poa' => $self->poa,
+						     '-seq' => $next);
+	} 
+	my $ref = $item->get_activated_object_reference;
+	push @list, $ref;
+	$counter++;
+    }
+    return ($counter > 0 ,\@list);
 }
 
 =head2 _seqio
