@@ -1,0 +1,6 @@
+
+This distribution is for the bioperl CORBA server
+applications. You will need both bioperl and
+CORBA::ORBit to run this
+
+
