@@ -6,7 +6,7 @@ use CORBA::ORBit idl => [ 'biocorba.idl' ];
 #build the actual orb and get the first POA (Portable Object Adaptor)
 $orb = CORBA::ORB_init("orbit-local-orb");
 $root_poa = $orb->resolve_initial_references("RootPOA");
-$servant = Bio::CorbaServer::BioEnv->new($root_poa);
+$servant = Bio::CorbaServer::BioEnv->new($root_poa, no_destroy => 1);
 
 # this registers this object as a live object with the ORB
 my $id = $root_poa->activate_object ($servant);

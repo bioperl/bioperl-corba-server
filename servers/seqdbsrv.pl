@@ -32,7 +32,7 @@ my $seqdb = Bio::Index::Fasta->new(-filename => $tst_index_file,
 
 					
 $servant = Bio::CorbaServer::SeqDB->new($root_poa,'test_db', 
-					$seqdb);
+					$seqdb, no_destroy => 1);
 
 # this registers this object as a live object with the ORB
 my $id = $root_poa->activate_object ($servant);

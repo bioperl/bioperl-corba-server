@@ -13,7 +13,8 @@ $root_poa = $orb->resolve_initial_references("RootPOA");
 
 $seqio  = Bio::SeqIO->new( '-format' => 'fasta',-fh => \*STDIN );
 
-$servant = Bio::CorbaServer::PrimarySeqIterator->new($root_poa,$seqio);
+$servant = Bio::CorbaServer::PrimarySeqIterator->new($root_poa,$seqio,
+						     no_destroy => 1);
 
 # this registers this object as a live object with the ORB
 my $id = $root_poa->activate_object ($servant);
