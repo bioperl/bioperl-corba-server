@@ -12,7 +12,7 @@
 
 =head1 NAME
 
-Bio::CorbaServer::Annotation - DESCRIPTION of Object
+Bio::CorbaServer::Annotation - An Annotation object
 
 =head1 SYNOPSIS
 
@@ -68,7 +68,7 @@ use vars qw(@ISA);
 use strict;
 use Bio::CorbaServer::Base;
 
-@ISA = qw( POA_bsane::seqcore::BioSequence Bio::CorbaServer::Base );
+@ISA = qw( POA_bsane::Annotation Bio::CorbaServer::Base );
 
 =head2 new
 
@@ -145,7 +145,8 @@ sub get_basis{
 
 sub get_value{
    my ($self) = @_;
-   return $self->{'_value'};
+   return new CORBA::Any( new CORBA::TypeCode("IDL:CORBA/String:1.0"),
+			  $self->{'_value'});
 }
 
 1;
