@@ -70,11 +70,10 @@ use vars qw(@ISA);
 use strict;
 
 use Bio::CorbaServer::PrimarySeq;
-use Bio::CorbaServer::SeqFeature;
-use Bio::CorbaServer::SeqFeatureVector;
+use Bio::CorbaServer::SeqFeatureCollection;
 use Bio::Range;
 
-@ISA = qw(POA_org::biocorba::seqcore::Seq Bio::CorbaServer::PrimarySeq);
+@ISA = qw(POA_bsane::seqcore::Seq Bio::CorbaServer::PrimarySeq);
 
 # new is handled by PrimarySeq
 
@@ -155,7 +154,7 @@ sub get_anonymous_sequence {
     return $s->get_activated_object_reference();
 }
 
-
+1;
 
 
 
