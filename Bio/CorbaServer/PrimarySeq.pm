@@ -100,7 +100,8 @@ sub new {
 
 sub get_type {
     my $self = shift;
-    my $moltype = uc $self->_seq->moltype;
+    # this returns a string representing the alphabet
+    my $moltype = uc $self->_seq->alphabet;
     if(  $moltype eq 'DNA' ) {
 	return 1;
     } elsif ( $moltype eq 'RNA' ) {
