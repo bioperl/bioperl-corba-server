@@ -47,7 +47,7 @@ print OUT "$ior";
 close OUT;
 
 # tell everyone we are ready for it
-print STDERR "Activating the ORB. IOR written to simpleseq.ior\n";
+print STDERR "Activating the ORB. IOR written to $ior_file\n";
 
 # and off we go. Woo Hoo!
 $root_poa->_get_the_POAManager->activate;
