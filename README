@@ -25,3 +25,12 @@ This code was started and mainly written by Ewan Birney
 
 
 
+
+RUNNING THE TESTS 
+-------
+
+Because the tests are dependant on a server being available it is
+necessary that the test servers and clients should be run rather than
+make test.  The only test - notest - will simply load all the 
+Bio::CorbaServer modules.
+

@@ -14,6 +14,7 @@ Bio/CorbaServer/SeqDB.pm
 Bio/CorbaServer/SeqFeature.pm
 Bio/CorbaServer/SeqFeatureIterator.pm
 t/multifa.seq
+t/notest.t
 testclients/bioenv.pl
 testclients/bioiterator.pl
 testclients/get_seqdb.pl
