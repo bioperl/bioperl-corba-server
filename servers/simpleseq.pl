@@ -1,7 +1,7 @@
 #!/usr/local/bin/perl -w
 
-use Bio::CorbaServer::PrimarySeq;
 use CORBA::ORBit idl => [ 'biocorba.idl' ];
+use Bio::CorbaServer::PrimarySeq;
 use Bio::SeqIO;
 use Bio::PrimarySeq;
 
