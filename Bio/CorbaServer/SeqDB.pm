@@ -126,7 +126,7 @@ use Bio::CorbaServer::Seq;
 
 sub get_Seq {
     my ($self,$id) = @_;
-    my $seq = $self->_seqdb->fetch($id);
+    my $seq = $self->_seqdb->get_Seq_by_acc($id);
     
     if( defined $seq ) {
 	# data marshall object out	

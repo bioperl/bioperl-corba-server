@@ -68,6 +68,8 @@ use Bio::CorbaServer::PrimarySeq;
 use Bio::CorbaServer::Seq;
 use Bio::CorbaServer::Base;
 use Bio::CorbaServer::PrimarySeqIterator;
+use Bio::CorbaServer::SeqDB;
+
 
 $DEBUG = 1;
 @ISA = qw( POA_org::biocorba::seqcore::BioEnv Bio::CorbaServer::Base);
@@ -78,6 +80,53 @@ sub new {
     my $self = $class->SUPER::new(@args);
     $self->{'_seqdbs'} = {};
     return $self;
+}
+
+sub add_SeqDB {
+    my ($self,$name,$version,$seqdb) = @_;
+
+    if( !defined $seqdb ) {
+	$self->throw("Must add name,version,seqdb");
+    }
+
+    if( !$seqdb->isa('Bio::DB::SeqI') ) {
+	$self->throw("Sequence must be a Bio::DB::SeqI implementing object. I'll Corba wrap it inside");
+    }
+
+    my $servant = Bio::CorbaServer::SeqDB->new('-poa'        => $self->poa,
+					'-name'       => $name, 
+					'-seqdb'      => $seqdb, 
+					'-no_destroy' => 1);
+
+    if( !exists $self->{'_seqdbs'}->{$name} ) {
+	$self->{'_seqdbs'}->{$name} = {};
+    }
+
+    print STDERR "Got $name and adding it...\n";
+
+    $self->{'_seqdbs'}->{$name}->{$version} = $servant->get_activated_object_reference;
+
+}
+
+=head2 allow_file_access
+
+ Title   : allow_file_access
+ Usage   : $obj->allow_file_access($newval)
+ Function: 
+ Example : 
+ Returns : value of allow_file_access
+ Args    : newvalue (optional)
+
+
+=cut
+
+sub allow_file_access{
+   my ($obj,$value) = @_;
+   if( defined $value) {
+      $obj->{'allow_file_access'} = $value;
+    }
+    return $obj->{'allow_file_access'};
+
 }
 
 =head2 get_PrimarySeq_from_file
@@ -94,6 +143,12 @@ sub new {
 
 sub get_PrimarySeq_from_file {
     my ($self,$format,$file) = @_;
+
+    if( !$self->allow_file_access ) {
+	throw org::biocorba::seqcore::UnableToProcess 
+	    reason => 'Server has not activated file access. Ask server to set allow_file_access to 1';
+	return;
+    }
 
     print STDERR "Got [$self][$format][$file]\n" if($DEBUG);
     my $seq;
@@ -138,6 +193,12 @@ sub get_PrimarySeq_from_file {
 sub get_PrimarySeqIterator_from_file {
     my ($self,$format,$file) = @_;
     
+    if( !$self->allow_file_access ) {
+	throw org::biocorba::seqcore::UnableToProcess 
+	    reason => 'Server has not activated file access. Ask server to set allow_file_access to 1';
+	return;
+    }
+
     my $seqio;
     eval {
         # if no format was passed, we just need to guess
