@@ -71,11 +71,9 @@ use vars qw(@ISA);
 use strict;
 
 
-use Bio::CorbaServer::PrimarySeq;
 use Bio::CorbaServer::Base;
 
 @ISA = qw(Bio::CorbaServer::Base POA_org::Biocorba::Seqcore::Seq);
-
 
 sub new {
     my $class = shift;
@@ -84,11 +82,10 @@ sub new {
 
     my $self = Bio::CorbaServer::Base->new($poa);
 
-    if( ! defined $seq ) {
-	die "Must have poa and seq into Seq";
+    if( ! defined $seq || !ref $seq || ! $seq->isa('Bio::SeqI') ) {
+	throw Corba::ServerException ("In CorbaServer Seq, got a non sequence [$seq]");	
     }
     bless $self,$class;
-
     $self->seq($seq);
     return $self;
 }
@@ -98,6 +95,16 @@ sub new {
 These functions are here because Seq inheriets from PrimarySeq
 object
 
+
+=head2 length
+
+ Title   : length
+ Usage   :
+ Function:
+ Example :
+ Returns : length of sequence
+ Args    :
+
 =cut
 
 sub length {
@@ -105,11 +112,34 @@ sub length {
     return $self->seq->length;
 }
 
+=head2 get_seq
+
+ Title   : get_seq
+ Usage   :
+ Function:
+ Example :
+ Returns : sequence string
+ Args    :
+
+
+=cut
+
 sub get_seq {
     my $self = shift;
     my $seqstr = $self->seq->seq;
     return $seqstr;
 }
+
+=head2 get_subseq 
+
+ Title   : sub_sequence 
+ Usage   :
+ Function:
+ Example :
+ Returns : a substring of the sequence string
+ Args    :
+
+=cut
 
 sub get_subseq {
     my $self = shift;
@@ -131,20 +161,64 @@ sub get_subseq {
 
 }
 
+=head2 display_id 
+
+ Title   : display_id 
+ Usage   :
+ Function:
+ Example :
+ Returns : display_id of sequence
+ Args    :
+
+=cut
+
 sub display_id {
     my $self = shift;
     return $self->seq->display_id();
 }
+
+=head2 accession_number
+
+ Title   : accession_number
+ Usage   :
+ Function:
+ Example :
+ Returns : accession_number of sequence
+ Args    :
+
+=cut
 
 sub accession_number {
     my $self = shift;
     return $self->seq->accession_number();
 }
 
+=head2 primary_id
+
+ Title   : primary_id
+ Usage   :
+ Function:
+ Example :
+ Returns : primary id of sequence
+ Args    :
+
+=cut
+
 sub primary_id {
     my $self = shift;
     return $self->seq->primary_id();
 }
+
+=head2 max_request_length
+
+ Title   : max_request_length
+ Usage   :
+ Function:
+ Example :
+ Returns : maximum allowable sequence length
+ Args    :
+
+=cut
 
 sub max_request_length {
     my $self = shift;
@@ -154,6 +228,15 @@ sub max_request_length {
 =head1 Seq functions
 
 These are the key Seq functions
+
+=head2 all_features
+
+ Title   : all_features
+ Usage   :
+ Function:
+ Example :
+ Returns : array of all the features of the sequence
+ Args    :
 
 =cut
 
@@ -181,23 +264,69 @@ sub all_features_iterator {
     return Bio::CorbaServer::SeqFeatureIterator->new($self->poa,\@corbarefs);
 }
 
+=head2 features_region
+
+ Title   : features_region
+ Usage   :
+ Function:
+ Example :
+ Returns : features in a specified region
+ Args    :
+
+=cut
+
 sub features_region {
 
 }
+
+=head2 features_region_iterator
+
+ Title   : features_region_iterator
+ Usage   :
+ Function:
+ Example :
+ Returns : iterator over a region of features for a sequence
+ Args    :
+
+=cut
 
 sub features_region_iterator {
 
 }
 
+=head2 max_feature_request
+
+ Title   : max_feature_request
+ Usage   :
+ Function:
+ Example :
+ Returns : integer of maximum number of features server can return
+ Args    :
+
+=cut
+
 sub max_feature_request {
     return 100000;
 }
 
+=head2 get_PrimarySeq
+
+ Title   : get_PrimarySeq
+ Usage   :
+ Function:
+ Example :
+ Returns : just a primary sequence with no features attached 
+ Args    :
+ 
+This is put here so that clients can ask servers just for the
+sequence and then free the large, seqfeature containing sequence.
+It prevents a sequence with features having to stay in memory for ever.
+
+=cut
+
 sub get_PrimarySeq {
 
 }
-
-
 
 
 =head2 seq
@@ -212,7 +341,7 @@ sub get_PrimarySeq {
 
 =cut
 
-sub seq{
+sub seq {
    my ($obj,$value) = @_;
    if( defined $value) {
       $obj->{'seq'} = $value;

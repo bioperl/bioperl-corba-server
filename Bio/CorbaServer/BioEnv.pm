@@ -69,15 +69,15 @@ use strict;
 
 use Bio::SeqIO;
 use Bio::CorbaServer::PrimarySeq;
+use Bio::CorbaServer::Base;
 
-@ISA = qw(POA_org::Biocorba::Seqcore::BioEnv);
+@ISA = qw( Bio::CorbaServer::Base POA_org::Biocorba::Seqcore::BioEnv);
 
 
 sub new {
     my $class = shift;
     my $poa = shift;
-    my $self = {};
-    $self->{'root_poa'} = $poa;
+    my $self = Bio::CorbaServer::Base->new($poa);
     bless $self,$class;
     return $self;
 }
@@ -105,17 +105,16 @@ sub PrimarySeq_from_file {
 	print STDERR "Got exception $@\n";
 	# set exception
     } else {
-	my $servant = Bio::CorbaServer::PrimarySeq->new($seq);
-	print STDERR "Got a $servant... about to activate...\n";
-
-	my $id = $self->{'root_poa'}->activate_object ($servant);
-	# seg faults if I don't touch id. Yikes
-	#my $other = $id;
-        #print STDERR "Got id $id - $other\n";
-	my $temp = $self->{'root_poa'}->id_to_reference ($id);
-
-	print STDERR "About to return servant\n";
-
+	my $servant = Bio::CorbaServer::PrimarySeq->new($self->poa, $seq);
+	print STDERR "Got a ",ref($servant),"... about to activate...\n";
+	my $id = $self->poa->activate_object ($servant);
+	
+        # seg faults if I don't touch id. Yikes
+	my $other = $id;
+	print STDERR "Got id $id - $other\n";
+	my $temp = $self->poa->id_to_reference($id);
+	
+	print STDERR "About to return servant\n";	
 	return $temp;
     }
 

@@ -75,8 +75,8 @@ sub new {
 
     my $self = Bio::CorbaServer::Base->new($poa);
 
-    if( ! defined $seqf ) {
-	die "Must have poa and seq into Seq";
+    if( ! defined $seqf || ! ref $seqf || ! $seqf->isa('Bio::SeqFeatureI') ) {
+	die "Must have poa and seq into Seq Feature";
     }
     bless $self,$class;
 
@@ -114,7 +114,7 @@ sub type{
 
 =cut
 
-sub source{
+sub source {
    my ($self,@args) = @_;
 
    return $self->seqf->source_tag;
@@ -188,7 +188,8 @@ sub strand{
 
 sub qualifiers{
    my ($self,@args) = @_;
-
+   
+      
    return ();
 }
 

@@ -75,7 +75,7 @@ use strict;
 use Bio::SeqIO;
 use Bio::CorbaServer::PrimarySeq;
 
-@ISA = qw(POA_org::Biocorba::Seqcore::PrimarySeqIterator);
+@ISA = qw(Bio::CorbaServer::Base POA_org::Biocorba::Seqcore::PrimarySeqIterator);
 
 
 sub new {
@@ -116,7 +116,7 @@ sub next{
    }
    $seq= $self->_next_seq();
    $self->_reload();
-   my $servant = Bio::CorbaServer::PrimarySeq->new($seq);
+   my $servant = Bio::CorbaServer::PrimarySeq->new($self->poa,$seq);
 
    my $id = $self->poa->activate_object ($servant);
    my $temp = $self->poa->id_to_reference ($id);
@@ -143,7 +143,6 @@ sub has_more{
    } else {
        return 1;
    }
-
 }
 
 
@@ -216,27 +215,6 @@ sub at_end{
       $obj->{'at_end'} = $value;
     }
     return $obj->{'at_end'};
-
-}
-
-=head2 poa
-
- Title   : poa
- Usage   : $obj->poa($newval)
- Function: 
- Example : 
- Returns : value of poa
- Args    : newvalue (optional)
-
-
-=cut
-
-sub poa{
-   my ($obj,$value) = @_;
-   if( defined $value) {
-      $obj->{'poa'} = $value;
-    }
-    return $obj->{'poa'};
 
 }
 

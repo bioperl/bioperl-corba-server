@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/local/bin/perl -w
 
 #$file = shift;
 foreach $a (@ARGV) {
@@ -6,7 +6,7 @@ foreach $a (@ARGV) {
 }
 
 if( ! defined $file ) {
-    $file = '/home/birney/src/bioperl-live/t/seqs.fas';
+    $file ="$ENV{HOME}/proj/bio/bioperl/main-trunk/bioperl-live/t/seqs.fas";
 }
 
 use CORBA::ORBit idl => [ 'biocorba.idl' ];
