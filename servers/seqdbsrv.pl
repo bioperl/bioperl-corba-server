@@ -40,7 +40,7 @@ my $id = $root_poa->activate_object ($servant);
 # we need to get the IOR of this object. The way to do this is to
 # to get a client of the object (temp) and then get the IOR of the
 # client
-$temp = $root_poa->id_to_reference ($id);
+my $temp = $root_poa->id_to_reference ($id);
 my $ior = $orb->object_to_string ($temp);
 
 # write out the IOR. This is what we give to a different machine
@@ -57,6 +57,6 @@ $root_poa->_get_the_POAManager->activate;
 $orb->run;
 
 END { 
-    unlink $dir . '/' . $tst_index_file;
+    unlink "$dir/$tst_index_file";
     system("rm -f $dir/$tst_index_file");
 }
